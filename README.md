@@ -1,1 +1,5 @@
-Compression algorithms!
+#Parallelized Compression/Decompression Algorithms
+
+---
+
+A parallelized RLE compression/decompression algorithm using UPC.
