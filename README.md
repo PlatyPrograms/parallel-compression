@@ -1,5 +1,5 @@
-#Parallelized Compression/Decompression Algorithms
+# Parallelized Compression/Decompression Algorithms
 
 ---
 
-A parallelized RLE compression/decompression algorithm using UPC.
+A parallelized RLE compression/decompression algorithm using MPI.
