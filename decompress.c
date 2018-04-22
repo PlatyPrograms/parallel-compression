@@ -7,7 +7,7 @@ uint64_t get(FILE* stream, char* used, char* cur, char size) {
   char left = size;
   char c, mask;
   uint64_t ret = 0;
-  printf("cur: %hhx\n", *cur);
+  printf("left: %i\n", left);
   while (left && !feof(stream)) {
     if (left > 8) {
       if (!(*used)) {
@@ -18,26 +18,35 @@ uint64_t get(FILE* stream, char* used, char* cur, char size) {
       }
       else {
 	ret = ret << *used;
-	ret += *cur & (0xff << *used); // possibly weird
+	ret += (*cur & (0xff << *used)) >> *used; // possibly weird
 	left -= 8 - *used;
-	used = 0;
+	*used = 0;
+        *cur = fgetc(stream);
       }
     }
     else {
-      printf("size: %i, left: %i, used: %i\n", size, left, *used);
+      printf("cur: %hhx\n", *cur);
+      // printf("size: %i, left: %i, used: %i\n", size, left, *used);
       // fewer characters in cur than I need
       if ((8 - *used) < left) {
 	ret = ret << (8 - *used);
-	ret += *cur & (0xff << *used); // possibly weird
+	ret += (*cur & (0xff << *used)) >> *used; // possibly weird
 	left -= 8 - *used;
 	*used = 0;
 	*cur = fgetc(stream);
       }
       ret = ret << left;
-      ret += *cur & (0xff << (8 - left));
-      printf("ret: %llx\n", ret);
+      unsigned char toAdd = *cur & (0xff << (8 - left));
+      printf("toAdd: %hhx\n", toAdd);
+      toAdd = toAdd >> (8 - left);
+      printf("toAdd: %hhx\n", toAdd);
+      ret += toAdd;
+      //ret += (*cur & (0xff << (8 - left))) >> *used;
+      //printf("ret: %llx\n", ret);
       *used = left;
       *cur = *cur << *used;
+      printf("left: %i, used: %i\n", left, *used);
+      printf("cur: %hhx\n", *cur);
       left = 0;
     }
   }
@@ -69,14 +78,14 @@ int main(int argc, char** argv) {
 
   printf("metaLen: %i | dataLen: %i | pSize: %i | fSize: %i\n", metaLen, dataLen, pSize, fSize);
 
-  char remain = 0;
+  char used = 0;
   char metaCur = fgetc(meta);;
 
-  uint64_t metaChunk = get(meta, &remain, &metaCur, metaLen);
+  uint64_t metaChunk = get(meta, &used, &metaCur, fSize);
 
   printf("metaChunk: %llx\n", metaChunk);
 
-  metaChunk = get(meta, &remain, &metaCur, metaLen);
+  metaChunk = get(meta, &used, &metaCur, fSize);
 
   printf("metaChunk: %llx\n", metaChunk);
 
