@@ -3,11 +3,10 @@
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 
-uint64_t get(FILE* stream, char* used, char* cur, char size) {
+uint64_t get(FILE* stream, char* used, unsigned char* cur, char size) {
   char left = size;
   char c, mask;
   uint64_t ret = 0;
-  printf("left: %i\n", left);
   while (left && !feof(stream)) {
     if (left > 8) {
       if (!(*used)) {
@@ -25,8 +24,6 @@ uint64_t get(FILE* stream, char* used, char* cur, char size) {
       }
     }
     else {
-      printf("cur: %hhx\n", *cur);
-      // printf("size: %i, left: %i, used: %i\n", size, left, *used);
       // fewer characters in cur than I need
       if ((8 - *used) < left) {
 	ret = ret << (8 - *used);
@@ -37,16 +34,10 @@ uint64_t get(FILE* stream, char* used, char* cur, char size) {
       }
       ret = ret << left;
       unsigned char toAdd = *cur & (0xff << (8 - left));
-      printf("toAdd: %hhx\n", toAdd);
       toAdd = toAdd >> (8 - left);
-      printf("toAdd: %hhx\n", toAdd);
       ret += toAdd;
-      //ret += (*cur & (0xff << (8 - left))) >> *used;
-      //printf("ret: %llx\n", ret);
-      *used = left;
-      *cur = *cur << *used;
-      printf("left: %i, used: %i\n", left, *used);
-      printf("cur: %hhx\n", *cur);
+      *used += left;
+      *cur = *cur << left;
       left = 0;
     }
   }
@@ -79,15 +70,21 @@ int main(int argc, char** argv) {
   printf("metaLen: %i | dataLen: %i | pSize: %i | fSize: %i\n", metaLen, dataLen, pSize, fSize);
 
   char used = 0;
-  char metaCur = fgetc(meta);;
+  unsigned char metaCur = fgetc(meta);
+  unsigned char dataCur = fgetc(data);
 
-  uint64_t metaChunk = get(meta, &used, &metaCur, fSize);
+  for (int i = 0; i < 6; ++i) {
+    uint64_t dataChunk = get(data, &used, &dataCur, 5);
+    printf("dataChunk: %llx\n", dataChunk);
+  }
 
-  printf("metaChunk: %llx\n", metaChunk);
+  /* uint64_t metaChunk = get(meta, &used, &metaCur, fSize); */
 
-  metaChunk = get(meta, &used, &metaCur, fSize);
+  /* printf("metaChunk: %llx\n", metaChunk); */
 
-  printf("metaChunk: %llx\n", metaChunk);
+  /* metaChunk = get(meta, &used, &metaCur, fSize); */
+
+  /* printf("metaChunk: %llx\n", metaChunk); */
 
   fclose(data);
   fclose(meta);
