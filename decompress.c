@@ -3,7 +3,7 @@
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 
-uint64_t get(FILE* stream, char* used, unsigned char* cur, char size) {
+uint64_t get(FILE* stream, unsigned char* used, unsigned char* cur, unsigned char size) {
   char left = size;
   char c, mask;
   uint64_t ret = 0;
@@ -44,6 +44,19 @@ uint64_t get(FILE* stream, char* used, unsigned char* cur, char size) {
   return ret;
 }
 
+void getMetaData(FILE* meta, FILE* data, unsigned char* mUsed, unsigned char* dUsed,
+                 unsigned char* mCur, unsigned char* dCur, unsigned char* runLen,
+                 unsigned char* keyLen) {
+  // assumes a 6-bit run length, key length; can be easily modified
+  *mUsed = *dUsed = 0;
+  *mCur = fgetc(meta);
+  *dCur = fgetc(data);
+  unsigned char tagSize = 8
+  *runLen = (char) get(meta, mUsed, mCur, tagSize);
+  *keyLen = (char) get(data, dUsed, dCur, tagSize);
+}
+  
+
 int main(int argc, char** argv) {
   if (argc != 2) {
     printf("usage: ./decompress [output name]\n");
@@ -56,6 +69,7 @@ int main(int argc, char** argv) {
   printf("opened %s\n", argv[1]);
 
   // find bit lengths of files
+  /*
   fseek(meta, 0, SEEK_END);
   int metaLen = ftell(meta);
   rewind(meta);
@@ -63,18 +77,15 @@ int main(int argc, char** argv) {
   fseek(data, 0, SEEK_END);
   int dataLen = ftell(data);
   rewind(data);
+  */
 
-  char pSize = fgetc(data); // bit length of one pane
-  char fSize = fgetc(meta); // bit length of one frame
+  unsigned char mUsed, dUsed, mCur, dCur, runLen, keyLen;
+  getMetaData(meta, data, &mUsed, &dUsed, &mCur, &dCur, &runLen, &keyLen);
 
-  printf("metaLen: %i | dataLen: %i | pSize: %i | fSize: %i\n", metaLen, dataLen, pSize, fSize);
-
-  char used = 0;
-  unsigned char metaCur = fgetc(meta);
-  unsigned char dataCur = fgetc(data);
+  printf("runLen: %i | keyLen: %i\n", runLen, keyLen);
 
   for (int i = 0; i < 6; ++i) {
-    uint64_t dataChunk = get(data, &used, &dataCur, 5);
+    uint64_t dataChunk = get(data, &dUsed, &dCur, 5);
     printf("dataChunk: %llx\n", dataChunk);
   }
 
