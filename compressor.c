@@ -34,7 +34,6 @@ int main(int argc, char * argv[]){
     //Get the number of chars to take before the
     //first '.' of the given inputFileName
     cutoff = (strchr(inputFileName, '.')) - &(inputFileName[0]);
-    //printf("%p - %p = %d\n", strchr(inputFileName, '.'), &(inputFileName[0]), cutoff);
     
     dataFileName = (char *) malloc(sizeof(char)*(cutoff+5));
     metaFileName = (char *) malloc(sizeof(char)*(cutoff+5));
@@ -83,8 +82,8 @@ int main(int argc, char * argv[]){
 	long int currPos = ftell(inputFile);
 
 	fwrite(buffer, sizeof(char), currPos-lastPos, stdout);	
-
-	memset(buffer, ' ', sizeof(char)*BUFFER_SIZE);
+	
+	//memset(buffer, ' ', sizeof(char)*BUFFER_SIZE);
 
 	lastPos = ftell(inputFile);
     }    
