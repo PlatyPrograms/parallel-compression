@@ -10,13 +10,8 @@
 //BUFFER_SIZE must be greater than or equal to 16
 #define BUFFER_SIZE 200
 
-
-typedef struct{
-
-    //TODO
-
-} buffIter;
-
+//The maximum key size in bits
+#define MAX_KEY_SIZE 64
 
 //Get the frist N bits from the given uint64
 void getFirstNBits  (uint64_t * src, uint64_t * dst, unsigned int n);
