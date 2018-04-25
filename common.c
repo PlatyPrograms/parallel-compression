@@ -2,7 +2,6 @@
 #include "common.h"
 
 
-
 //Get the first n number of bits from the given 64-bit int
 void getFirstNBits(uint64_t * src, 
 		   uint64_t * dst, 
