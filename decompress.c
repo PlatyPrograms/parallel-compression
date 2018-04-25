@@ -56,15 +56,36 @@ void put(FILE* stream, uint64_t toPut, unsigned char* used,
   // used tracks bits filled of cur, cur is the character being accumulated
   // into for writing
   unsigned char left = size; // bits still to write
-  unsigned char mask;
+  unsigned char toPutChar;
   unsigned char slices[8];
+  uint64_t mask;
   slices[0] = toPut;
   while (left > 0) {
-    if (left < (8 - used)) {
-      // put remaining bits of left into cur, write if full
+    if (left < (8 - *used)) { // enough space in cur for the rest of the bits
+      // put remaining bits of toPut into cur, write if full
+      mask = 0xffffffffffffffff >> (64 - left);
+      *cur = *cur << left;
+      *cur += (char) toPut & mask;
+      *used += left;
+      if (*used == 8) {
+        fwrite(cur, 1, 1, stream);
+        *cur = 0;
+        *used = 0;
+      }
+      left = 0;
     }
     else {
       // fill bottom bits of cur, write
+      uint64_t temp = toPut;
+      temp = temp >> (left - (8 - *used)); // bring relevant bits to bottom
+      mask = 0xffffffffffffffff >> (64 - (8 - *used));
+      *cur = *cur << (8 - *used);
+      *cur += (char) temp & mask;
+      fwrite(cur, 1, 1, stream);
+      left -= (8 - *used);
+      *cur = 0;
+      *used = 0;
+    }
   }
 }
 
@@ -84,26 +105,26 @@ void getMetaData(FILE* meta, FILE* data, unsigned char* mUsed,
 void decompress(FILE* meta, FILE* data, FILE* out,
                 unsigned char* mUsed, unsigned char* dUsed,
                 unsigned char* mCur, unsigned char* dCur,
-                unsigned char* runLen, unsigned char* keyLen) {
+                unsigned char runLen, unsigned char keyLen) {
   uint64_t run, key, i, j;
   unsigned char oCur;
   unsigned char oUsed = 0;
   
   while (!feof(meta)) {
-    run = get(meta, mUsed, mCur, *runLen);
+    run = get(meta, mUsed, mCur, runLen);
     // escape code, series of unique keys
     if (run == 0) {
-      run = get(meta, mUsed, mCur, *runLen);
+      run = get(meta, mUsed, mCur, runLen);
       for (j = 0; j < run; ++j) {
-        key = get(data, dUsed, dCur, *keyLen);
-        put(out, key, &oUsed, &oCur, *keyLen);
+        key = get(data, dUsed, dCur, keyLen);
+        put(out, key, &oUsed, &oCur, keyLen);
       }
     }
     // proper run
     else {
-      key = get(data, dUsed, dCur, *keyLen);
+      key = get(data, dUsed, dCur, keyLen);
       for (j = 0; j < run; ++j) {
-        put(out, key, &oUsed, &oCur, *keyLen);
+        put(out, key, &oUsed, &oCur, keyLen);
       }
     }
   }
@@ -116,13 +137,15 @@ int main(int argc, char** argv) {
   }
   FILE* data = fopen("data", "rb");
   FILE* meta = fopen("meta", "rb");
-  FILE* fout = fopen(argv[1], "wb");
+  FILE* out = fopen(argv[1], "wb");
 
   printf("opened %s\n", argv[1]);
   
   unsigned char mUsed, dUsed, mCur, dCur, runLen, keyLen;
   getMetaData(meta, data, &mUsed, &dUsed, &mCur, &dCur, &runLen, &keyLen);
 
+  decompress(meta, data, out, &mUsed, &dUsed, &mCur, &dCur, runLen, keyLen);
+  
   printf("runLen: %i | keyLen: %i\n", runLen, keyLen);
   
   /* int i; */
@@ -141,6 +164,6 @@ int main(int argc, char** argv) {
 
   fclose(data);
   fclose(meta);
-  fclose(fout);
+  fclose(out);
   return 0;
 }
