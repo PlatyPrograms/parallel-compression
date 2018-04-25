@@ -8,14 +8,14 @@ TARGETS = compressor
 all : ${TARGETS}
 
 
-compressor : compressor.o comp_funcs.o
+compressor : compressor.o common.o
 	${CC} ${CFLAGS} -o $@ $^
 
 
 compressor.o : compressor.c
 	${CC} ${CFLAGS} -o $@ -c $^
 
-comp_funcs.o : comp_funcs.c
+commmon.o : common.c
 	${CC} ${CFLAGS} -o $@ -c $^
 
 

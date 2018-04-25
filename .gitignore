@@ -5,6 +5,8 @@
 # Whitelist important files, leave out object files and executables
 !*.c
 !*.h
+!*.py
+!*.txt
 !Makefile
 !README.md
 !.gitignore

@@ -3,10 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "comp_funcs.h"
-
-//BUFFER_SIZE measured in bytes
-#define BUFFER_SIZE 200
+#include "common.h"
 
 /**
  * Command line arguments:
@@ -25,7 +22,7 @@ int main(int argc, char * argv[]){
     
     if(argc != 3){
 	fprintf(stderr, "Invalid number of input arguments. Got %d, expected 2.\n", (argc-1));
-	fprintf(stderr, "Expected Arguments:\n(1) Input File Name\n(2) Frame Size\n(3) Panel Size\n");
+	fprintf(stderr, "Expected Arguments:\n(1) Input File Name\n(2) Key size in bitse\n");
 	return -1;
     }
    
@@ -54,7 +51,7 @@ int main(int argc, char * argv[]){
     printf("keySize = %d bits \n", keySize);
 
     //Now let's create the files and buffer we will be filling
-    char *buffer = malloc(sizeof(char)*BUFFER_SIZE);
+    unsigned char *buffer = malloc(sizeof(unsigned char)*BUFFER_SIZE);
     inputFile = fopen(inputFileName, "rb");
     dataFile  = fopen(dataFileName,  "wb");
     metaFile  = fopen(metaFileName,  "wb");
@@ -77,32 +74,64 @@ int main(int argc, char * argv[]){
     //TODO: Start by writing the key size to the data file
     //and by writing the first six placeholder bits of the meta file
 
+    uint64_t currMacroBuff = 0;
+    uint64_t nextMacroBuff = 0;
+
+    unsigned long int bufferPos = 0; //Measured in bytes
+
+    unsigned long int lastPos = 0;    
     //This portion reads the file by buffering char values
-    long int lastPos = 0;
-    unsigned long long longestRun = 0;
+    while(fread(buffer, BUFFER_SIZE, 1, inputFile) == 1){	
+	unsigned long int currPos = ftell(inputFile);
 
-    while(fread(buffer, BUFFER_SIZE, 1, inputFile) == 1){
-	long int currPos = ftell(inputFile);
-	
 	//Print the buffer contents
-	//fwrite(buffer, sizeof(char), currPos-lastPos, stdout);	
-	
-	//Now that the char buffer is filled, we can start reading
-	//the elements with the given key size, then writing them
-	
-	//For each element in the buffer, read up to n bits at a time
-	for(long int i = 0; i < BUFFER_SIZE; ++i){
-	    long int readUpTo = 0;
-	    //for(; readUpTo){
+	fwrite(buffer, sizeof(char), currPos-lastPos, stdout);
 
-	    //}
+	
+	//If the keySize is less than 33, then we need to use
+	//the micro buffers on the macro buffers
+	if(keySize <= 32){
+	    
+	    uint64_t currMicroBuff = 0;
+	    uint64_t nextMicroBuff = 0;
+	    
 	}
 
+	//If the keySize is greater than 32 bits, then we can easily
+	//just use the macro buffers. Will need to look at every
+	//two macro buffers
+	else{
 
+	    uint64_t curr = 0;
+	    uint64_t next = 0;
+
+	    currMacroBuff = buffer[bufferPos];
+	    nextMacroBuff = buffer[bufferPos+8];
+
+	    while(bufferPos+8 < BUFFER_SIZE){
+		
+		getFirstNBits(&currMacroBuff, &curr, keySize);
+		//Now get the next (64 minus keySize) bits from currMacroBuff and
+		//then the other (keySize + keySize - 64) bits from nextMicroBuff
+		
+		getLastNBits(&curr, &next, (64-keySize));
+		next = next << (keySize);
+
+		uint64_t temp = 0;
+		getFirstNBits(&nextMacroBuff, &temp, (keySize));
+		temp = temp >> (64-keySize);
+
+		uint64_t joint = 0;
+		joinBits(next, temp, &joint, (64-keySize));
+		
+	    }
+
+	}
+	
 	lastPos = ftell(inputFile);
     }    
     if(feof(inputFile)){
-	long int bytesLeft = ftell(inputFile) - lastPos;
+	unsigned long int bytesLeft = ftell(inputFile) - lastPos;
 	
 	//Print the buffer contents
 	//fwrite(buffer, sizeof(char), bytesLeft, stdout);
