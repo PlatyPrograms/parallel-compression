@@ -14,6 +14,28 @@
  *
  */
 
+void initMetaFile(FILE * metaFile, unsigned int keySize){
+
+    //Write first 48 bits as all zeros
+    fputc(0, metaFile);
+    fputc(0, metaFile);
+    fputc(0, metaFile);
+    fputc(0, metaFile);
+    fputc(0, metaFile);
+    fputc(0, metaFile);
+
+    //Write next 8 bits as keySize
+    fputc((int) keySize, metaFile);
+}
+
+
+void initDataFile(FILE * dataFile, unsigned int keySize){
+
+    //Write first 8 bits as keySize
+    fputc((int) keySize, dataFile);
+}
+
+
 int main(int argc, char * argv[]){
 
     char *inputFileName, *dataFileName, *metaFileName;
@@ -78,12 +100,12 @@ int main(int argc, char * argv[]){
 	return -1;
     }
 
-    //TODO: Start by writing the key size to the data file
-    //and by writing the first six placeholder bits of the meta file
+    initMetaFile(metaFile, keySize);
+    initDataFile(dataFile, keySize);
 
     buffIter myIter;
-
     unsigned long int lastPos = 0;
+
     //This portion reads the file by buffering char values
     while(fread(buffer, BUFFER_SIZE, 1, inputFile) == 1){	
 	unsigned long int currPos = ftell(inputFile);
@@ -133,7 +155,6 @@ int main(int argc, char * argv[]){
 	//Print the buffer contents
 	fwrite(buffer, sizeof(char), bytesLeft, stdout);
     }
-
     
 
     //Close the files after we use them

@@ -1,7 +1,7 @@
 
 CC = gcc
 
-CFLAGS = -O3
+CFLAGS = -O3 --std=c99
 
 TARGETS = compressor
 
