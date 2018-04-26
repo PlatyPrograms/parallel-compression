@@ -16,6 +16,6 @@
 #define MAX_KEY_SIZE 64
 
 
-void writeToFile(FILE * file, uint64_t * toWrite);
+void write64ToFile(FILE * file, uint64_t * toWrite);
 
 #endif

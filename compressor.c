@@ -120,6 +120,7 @@ int main(int argc, char * argv[]){
 	uint64_t next = 0;
 	uint64_t last = 0;
 	uint64_t count = 1;
+	uint64_t bitIdx = keySize;
 
 	advance(&myIter, &next);
 
@@ -136,6 +137,7 @@ int main(int argc, char * argv[]){
 	    else{
 		printf("Count was: %" PRIu64 "\n", count);
 		count = 1;
+		
 	    }	    	    
 	}
 

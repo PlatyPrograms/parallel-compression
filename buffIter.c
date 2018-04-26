@@ -59,16 +59,10 @@ void advance(buffIter * iter, uint64_t * result){
 	//Shift to the right
 	container = container >> (64 - nextBitInCntnr);
 
-	//printf("Right Shifted %" PRIx64 "\n", container);
-
 	//Then shift back to the left
 	container = container << (64 - iter->bitStep);
 
-	//printf("Left Shifted %" PRIx64 "\n", container);
-
 	*result = container;
-
-	//printf("Val of ret %" PRIx64 "\n", *result);
 
 	iter->currStep += 1;
     }

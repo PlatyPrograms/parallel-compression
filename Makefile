@@ -8,7 +8,7 @@ TARGETS = compressor
 all : ${TARGETS}
 
 
-compressor : compressor.o common.o buffIter.o
+compressor : compressor.o common.o buffIter.o writeBuff.o
 	${CC} ${CFLAGS} -o $@ $^
 
 
@@ -21,6 +21,10 @@ commmon.o : common.c
 
 buffIter.o : buffIter.c
 	${CC} ${CFLAGS} -o $@ -c $^
+
+writeBuff.o : writeBuff.c
+	${CC} ${CFLAGS} -o $@ -c $^
+
 
 
 fullclean :

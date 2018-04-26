@@ -11,10 +11,10 @@ typedef struct{
     unsigned char * buff;
     unsigned long int currStep;
 
-    //All of these are measured in bytes
+    //This is measured in bytes
     unsigned long int buffSize; 
 
-    //These are measured in bits
+    //This is measured in bits
     unsigned long int bitStep;
 
 } buffIter;
