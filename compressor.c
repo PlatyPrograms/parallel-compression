@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
+#include "buffIter.h"
 
 /**
  * Command line arguments:
@@ -25,7 +26,14 @@ int main(int argc, char * argv[]){
 	fprintf(stderr, "Expected Arguments:\n(1) Input File Name\n(2) Key size in bitse\n");
 	return -1;
     }
-   
+
+    sscanf(argv[2], "%d", &keySize);
+
+    if(keySize < 1 || keySize > 64){
+	fprintf(stderr, "Invalid key size \"%d\"; must be in range of [1, 64]", keySize);
+	return -1;
+    }
+
     inputFileName = argv[1];
     inputNameLength = strlen(inputFileName);
 
@@ -44,14 +52,11 @@ int main(int argc, char * argv[]){
     strcat(dataFileName, ".data");
     strcat(metaFileName, ".meta");    
     
-    sscanf(argv[2], "%d", &keySize);
-    
     //Print some updates for the user
     printf("Producing files named: %s and %s\n", dataFileName, metaFileName);
     printf("keySize = %d bits \n", keySize);
 
-    //Now let's create the files and buffer we will be filling
-    unsigned char *buffer = malloc(sizeof(unsigned char)*BUFFER_SIZE);
+    //Now let's create the files we will read and write to
     inputFile = fopen(inputFileName, "rb");
     dataFile  = fopen(dataFileName,  "wb");
     metaFile  = fopen(metaFileName,  "wb");
@@ -66,6 +71,8 @@ int main(int argc, char * argv[]){
 	return -1;
     }    
 
+    unsigned char *buffer = malloc(sizeof(unsigned char)*BUFFER_SIZE);
+
     if(!buffer){
 	fprintf(stderr, "Error allocating read buffer, not enough memory!\n");
 	return -1;
@@ -74,67 +81,57 @@ int main(int argc, char * argv[]){
     //TODO: Start by writing the key size to the data file
     //and by writing the first six placeholder bits of the meta file
 
-    uint64_t currMacroBuff = 0;
-    uint64_t nextMacroBuff = 0;
+    buffIter myIter;
 
-    unsigned long int bufferPos = 0; //Measured in bytes
-
-    unsigned long int lastPos = 0;    
+    unsigned long int lastPos = 0;
     //This portion reads the file by buffering char values
     while(fread(buffer, BUFFER_SIZE, 1, inputFile) == 1){	
 	unsigned long int currPos = ftell(inputFile);
 
+	initBuffIter(&myIter, buffer, BUFFER_SIZE, keySize);
+
 	//Print the buffer contents
 	fwrite(buffer, sizeof(char), currPos-lastPos, stdout);
 
-	
-	//If the keySize is less than 33, then we need to use
-	//the micro buffers on the macro buffers
-	if(keySize <= 32){
-	    
-	    uint64_t currMicroBuff = 0;
-	    uint64_t nextMicroBuff = 0;
-	    
-	}
+	printf("\n");	
 
-	//If the keySize is greater than 32 bits, then we can easily
-	//just use the macro buffers. Will need to look at every
-	//two macro buffers
-	else{
+	uint64_t next = 0;
+	uint64_t last = 0;
+	uint64_t count = 1;
 
-	    uint64_t curr = 0;
-	    uint64_t next = 0;
+	advance(&myIter, &next);
 
-	    currMacroBuff = buffer[bufferPos];
-	    nextMacroBuff = buffer[bufferPos+8];
+	while(iterHasNext(&myIter)){    
+	   
+	    last = next;
+	    advance(&myIter, &next);
 
-	    while(bufferPos+8 < BUFFER_SIZE){
-		
-		getFirstNBits(&currMacroBuff, &curr, keySize);
-		//Now get the next (64 minus keySize) bits from currMacroBuff and
-		//then the other (keySize + keySize - 64) bits from nextMicroBuff
-		
-		getLastNBits(&curr, &next, (64-keySize));
-		next = next << (keySize);
-
-		uint64_t temp = 0;
-		getFirstNBits(&nextMacroBuff, &temp, (keySize));
-		temp = temp >> (64-keySize);
-
-		uint64_t joint = 0;
-		joinBits(next, temp, &joint, (64-keySize));
-		
+	    //If we have a match, keep running
+	    if(next == last){	
+		++count;
 	    }
-
+	    //If they don't match, write 'last' and 'count' to our files
+	    else{
+		printf("Count was: %" PRIu64 "\n", count);
+		count = 1;
+	    }	    	    
 	}
-	
+
+	//When it has run out, we need to grab the next buffer
+	//but need to correctly offset it to account for the
+	//bits we never used from this last buffer.
+
+	return 0;
+
+	printf("\n");
+
 	lastPos = ftell(inputFile);
     }    
     if(feof(inputFile)){
 	unsigned long int bytesLeft = ftell(inputFile) - lastPos;
 	
 	//Print the buffer contents
-	//fwrite(buffer, sizeof(char), bytesLeft, stdout);
+	fwrite(buffer, sizeof(char), bytesLeft, stdout);
     }
 
     
