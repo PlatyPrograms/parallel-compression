@@ -91,8 +91,8 @@ void getMetaData(FILE* meta, FILE* data, unsigned char* mUsed,
   *mUsed = *dUsed = 0;
   *mCur = fgetc(meta);
   *dCur = fgetc(data);
-  unsigned char tagSize = 6;
-  unsigned char numRunSize = 8;
+  unsigned char tagSize = 8; // THIS IS INEFFICIENT BUT TIME
+  unsigned char numRunSize = 48;
   *numRuns = get(meta, mUsed, mCur, numRunSize);
   *runLen = (char) get(meta, mUsed, mCur, tagSize);
   *keyLen = (char) get(data, dUsed, dCur, tagSize);
