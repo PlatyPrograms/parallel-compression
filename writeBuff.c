@@ -32,17 +32,29 @@ void pushToWriteBuff(writeBuff * wBuff, uint64_t toWrite){
     else{
 	unsigned int avalBits = (64 - wBuff->currBit);
 
-	uint64_t toAdd = toWrite >> wBuff->currBit;
-	wBuff->buff += toAdd;
+	//printf("Aval bits: %lu \n", avalBits);
+	//printf("input to deal with: %" PRIx64 "\n", toWrite);
+
+	if(avalBits != 0){
+	    uint64_t toAdd = (toWrite >> (wBuff->currBit));
+	    //printf("Shifted toAdd by %lu bits\n", wBuff->currBit);
+	    //printf("toAdd val: %" PRIx64 "\n", toAdd);
+
+	    wBuff->buff += toAdd;
+	}
+
+	//printf("Calling write function: giving  " "%" PRIx64 "\n", wBuff->buff);
 
 	//Write to file here
-	write64ToFile(wBuff->file, &(wBuff->buff));	
+	write64ToFile(wBuff->file, (wBuff->buff));	
 
 	//Reset the buff
 	wBuff->buff = 0;
 
-	uint64_t leftoverBits = toWrite << avalBits;
+	uint64_t leftoverBits = (toWrite << avalBits);
 	wBuff->buff += leftoverBits;
+
+	//printf("Next buffer is: %" PRIx64 "\n", wBuff->buff);
 
 	wBuff->currBit = wBuff->keySize - avalBits;
     }

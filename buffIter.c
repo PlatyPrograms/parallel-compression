@@ -24,7 +24,7 @@ bool iterHasNext(buffIter * iter){
     unsigned long int currBitInBuff = (iter->currStep)*(iter->bitStep);
 
     //If we can advance in the bits
-    return ((currBitInBuff + (iter->bitStep)) < (iter->buffSize)*8);
+    return ((currBitInBuff + (iter->bitStep)) <= (iter->buffSize)*8);
     
 }
 
@@ -35,32 +35,36 @@ void advance(buffIter * iter, uint64_t * result){
     unsigned long int currBitInBuff = (iter->currStep)*(iter->bitStep);
 
     //If we can advance in the bits, then do so
-    if((currBitInBuff + (iter->bitStep)) < (iter->buffSize)*8){
+    if((currBitInBuff + (iter->bitStep)) <= (iter->buffSize)*8){
 	
 	//Current bit and next bit are guaranteed to be in the same
 	//uint64_t because the the keySize is guaranteed to be <= 64
 
 	unsigned char * ptr = &(iter->buff[currBitInBuff / 8]);
+	//printf("Address of step: %p\n", ptr);
 	uint64_t container = 0; 
 
 	//Now, for the next 8 bytes, copy them into container
-	container  = (((uint64_t)(ptr[0])) << (64 - 1*8));
-	container += (((uint64_t)(ptr[1])) << (64 - 2*8));
-	container += (((uint64_t)(ptr[2])) << (64 - 3*8));
-	container += (((uint64_t)(ptr[3])) << (64 - 4*8));
-	container += (((uint64_t)(ptr[4])) << (64 - 5*8));
-	container += (((uint64_t)(ptr[5])) << (64 - 6*8));
-	container += (((uint64_t)(ptr[6])) << (64 - 7*8));
-	container += (((uint64_t)(ptr[7])) << (64 - 8*8));
+	container  = (((uint64_t)(ptr[0])) << (56) );
+	container += (((uint64_t)(ptr[1])) << (48) );
+	container += (((uint64_t)(ptr[2])) << (40) );
+	container += (((uint64_t)(ptr[3])) << (32) );
+	container += (((uint64_t)(ptr[4])) << (24) );
+	container += (((uint64_t)(ptr[5])) << (16) );
+	container += (((uint64_t)(ptr[6])) <<  (8) );
+	container += (((uint64_t)(ptr[7])) <<  (0) );
 
-	unsigned int currBitInCntnr = currBitInBuff % 8;
-	unsigned int nextBitInCntnr = currBitInBuff + (iter->bitStep);
+	//printf("Container    " "%" PRIx64 "\n", container);
+
+	unsigned int nextBitInCntnr = (currBitInBuff % 8) + (iter->bitStep);
 
 	//Shift to the right
-	container = container >> (64 - nextBitInCntnr);
+	container = (container >> (64 - nextBitInCntnr));
 
 	//Then shift back to the left
-	container = container << (64 - iter->bitStep);
+	container = (container << (64 - iter->bitStep));
+
+	//printf("Putting out: %" PRIx64 "\n\n", container);
 
 	*result = container;
 

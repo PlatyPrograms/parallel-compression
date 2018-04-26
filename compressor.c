@@ -5,6 +5,7 @@
 #include <string.h>
 #include "common.h"
 #include "buffIter.h"
+#include "writeBuff.h"
 
 /**
  * Command line arguments:
@@ -32,7 +33,7 @@ void initMetaFile(FILE * metaFile, unsigned int keySize){
 void initDataFile(FILE * dataFile, unsigned int keySize){
 
     //Write first 8 bits as keySize
-    fputc((int) keySize, dataFile);
+    fputc(keySize, dataFile);
 }
 
 
@@ -104,7 +105,12 @@ int main(int argc, char * argv[]){
     initDataFile(dataFile, keySize);
 
     buffIter myIter;
+    writeBuff metaWriter;
+    writeBuff dataWriter;
     unsigned long int lastPos = 0;
+
+    initWriteBuff(&metaWriter, metaFile, keySize);
+    initWriteBuff(&dataWriter, dataFile, keySize);
 
     //This portion reads the file by buffering char values
     while(fread(buffer, BUFFER_SIZE, 1, inputFile) == 1){	
@@ -122,32 +128,39 @@ int main(int argc, char * argv[]){
 	uint64_t count = 1;
 	uint64_t bitIdx = keySize;
 
-	advance(&myIter, &next);
 
+	advance(&myIter, &next);
+	//printf("Step %lu Read in %" PRIx64 "\n", myIter.currStep, next);
+
+	//Go through the buffer
 	while(iterHasNext(&myIter)){    
 	   
 	    last = next;
 	    advance(&myIter, &next);
+	    //printf("Step %lu Read in %" PRIx64 "\n", myIter.currStep, next);
 
-	    //If we have a match, keep running
+	    //If we have a match, keep running	    
 	    if(next == last){	
 		++count;
 	    }
 	    //If they don't match, write 'last' and 'count' to our files
 	    else{
-		printf("Count was: %" PRIu64 "\n", count);
+		//printf("Writing in: %" PRIx64 "\n", last);
+		pushToWriteBuff(&dataWriter, last);
+		printf("Buffer Post Push : %" PRIx64 "\n", dataWriter.buff);
 		count = 1;
-		
 	    }	    	    
 	}
-
+	//Keep in mind that the writeBuff still has to post its contents
+	//just move on to the next buffer and continue it from there
+	
 	//When it has run out, we need to grab the next buffer
 	//but need to correctly offset it to account for the
 	//bits we never used from this last buffer.
 
 	return 0;
 
-	printf("\n");
+	//printf("\n");
 
 	lastPos = ftell(inputFile);
     }    
