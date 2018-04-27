@@ -151,10 +151,19 @@ int main(int argc, char * argv[]){
 		count = 1;
 	    }	    	    
 	}
-	//Keep in mind that the writeBuff still has to post its contents
-	//just move on to the next buffer and continue it from there
-	
+		
 	unusedBits = unusedBuffBits(&myIter);
+
+	//Need to change fread() to account for unused bits from this iteration
+	//Take the current position and move the file pointer back a few bytes
+	//based on how many unused bits there are.
+	fseek(inputFile, -(unusedBits/8), SEEK_CUR);
+
+	if(unusedBits % 8){
+	    fseek(inputFile, -1, SEEK_CUR);
+	}
+
+	unusedBits = unusedBits % 8;
 	
 	lastPos = ftell(inputFile);
     }    

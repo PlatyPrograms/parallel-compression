@@ -10,7 +10,7 @@
 
 //BUFFER_SIZE measured in bytes
 //BUFFER_SIZE must be greater than or equal to 16
-#define BUFFER_SIZE 200
+#define BUFFER_SIZE 20
 
 //The maximum key size in bits
 #define MAX_KEY_SIZE 64
