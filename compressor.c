@@ -110,34 +110,32 @@ int main(int argc, char * argv[]){
     unsigned long int lastPos = 0;
     unsigned long int unusedBits = 0;
 
+    uint64_t next = 0;
+    uint64_t last = 0;
+    uint64_t count = 1;
+
+    size_t validRead = fread(buffer, BUFFER_SIZE, 1, inputFile);
+
     initWriteBuff(&metaWriter, metaFile, keySize);
     initWriteBuff(&dataWriter, dataFile, keySize);
+    initBuffIter(&myIter, buffer, BUFFER_SIZE, keySize);
+    
+    advance(&myIter, &next);	
+    last = next;
 
     //This portion reads the file by buffering char values
-    while(fread(buffer, BUFFER_SIZE, 1, inputFile) == 1){	
+    while(validRead == 1){	
 	unsigned long int currPos = ftell(inputFile);
 
-	initBuffIter(&myIter, buffer, BUFFER_SIZE, keySize, unusedBits);
-
 	//Print the buffer contents
-	fwrite(buffer, sizeof(char), currPos-lastPos, stdout);
-
-	printf("\n");	
-
-	uint64_t next = 0;
-	uint64_t last = 0;
-	uint64_t count = 1;
-	uint64_t bitIdx = keySize;
-
-	advance(&myIter, &next);
-	//printf("Step %lu Read in %" PRIx64 "\n", myIter.currStep, next);
-
+	//fwrite(buffer, sizeof(char), currPos-lastPos, stdout);
+	
 	//Go through the buffer
 	while(iterHasNext(&myIter)){    
 	   
-	    last = next;
+	    //last = next;
 	    advance(&myIter, &next);
-	    //printf("Step %lu Read in %" PRIx64 "\n", myIter.currStep, next);
+	    printf("next is: %" PRIx64 "\n", next);
 
 	    //If we have a match, keep running	    
 	    if(next == last){	
@@ -145,14 +143,20 @@ int main(int argc, char * argv[]){
 	    }
 	    //If they don't match, write 'last' and 'count' to our files
 	    else{
-		//printf("Writing in: %" PRIx64 "\n", last);
+		printf("Pushing to write %" PRIx64 "\n", last);
+		printf("Counted: %" PRIu64 "\n", count);
 		pushToWriteBuff(&dataWriter, last);
-		printf("Buffer Post Push : %" PRIx64 "\n", dataWriter.buff);
+		printf("Buffer post push: %" PRIx64 "\n", dataWriter.buff);
 		count = 1;
-	    }	    	    
+	    }
+	    last = next;
 	}
-		
+	
 	unusedBits = unusedBuffBits(&myIter);
+
+	printf("End of buffer hit! Count is:%" PRIu64 "\n",count);
+	printf("Current unused bits: %lu\n", unusedBits);
+	printf("Current file pos: %lu\n", currPos);
 
 	//Need to change fread() to account for unused bits from this iteration
 	//Take the current position and move the file pointer back a few bytes
@@ -163,17 +167,53 @@ int main(int argc, char * argv[]){
 	    fseek(inputFile, -1, SEEK_CUR);
 	}
 
-	unusedBits = unusedBits % 8;
-	
+	if(unusedBits){
+	    unusedBits = 8 - (unusedBits % 8);
+	}
+    
 	lastPos = ftell(inputFile);
-    }    
+      
+	printf("File pos correction: %lu\n", lastPos);	
+	printf("moving on to next buffer\n");
+	printf("Unused bits: %lu\n\n", unusedBits);
+
+	//Fill the buffer with the next set of contents
+	validRead = fread(buffer, BUFFER_SIZE, 1, inputFile);
+	setStartOffset(&myIter, unusedBits);
+    }
+
     if(feof(inputFile)){
 	unsigned long int bytesLeft = ftell(inputFile) - lastPos;
 	
 	//Print the buffer contents
-	fwrite(buffer, sizeof(char), bytesLeft, stdout);
+	//fwrite(buffer, sizeof(char), bytesLeft, stdout);
+
+	initBuffIter(&myIter, buffer, bytesLeft, keySize);  
+
+	while(iterHasNext(&myIter)){    
+	   
+	    //last = next;
+	    advance(&myIter, &next);
+	    printf("END next is: %" PRIx64 "\n", next);
+
+	    //If we have a match, keep running	    
+	    if(next == last){	
+		++count;
+	    }
+	    //If they don't match, write 'last' and 'count' to our files
+	    else{
+		printf("END Pushing to write %" PRIx64 "\n", last);
+		printf("END Counted: %" PRIu64 "\n", count);
+		pushToWriteBuff(&dataWriter, last);
+		printf("END Buffer post push: %" PRIx64 "\n", dataWriter.buff);
+		count = 1;
+	    }
+	    last = next;
+	}
+
     }
     
+    closeWriteBuff(&dataWriter);
 
     //Close the files after we use them
     fclose(inputFile);

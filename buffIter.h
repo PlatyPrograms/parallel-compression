@@ -15,7 +15,7 @@ typedef struct{
 
     //This is measured in bits
     unsigned long int currBit;
-    unsigned long int startBitOffset;
+    //unsigned long int startBitOffset;
     unsigned long int stepSize;
 
 } buffIter;
@@ -24,9 +24,9 @@ typedef struct{
 void initBuffIter(buffIter * iter, 
 		  unsigned char * buffer, 
 		  unsigned long int bufferSize,
-		  unsigned long int bitStepSize,
-		  unsigned long int startBitOffset);
+		  unsigned long int bitStepSize);
 
+void setStartOffset(buffIter * iter, unsigned long int startBitOffset);
 bool iterHasNext(buffIter * iter);
 void advance(buffIter * iter, uint64_t * result);
 unsigned long int unusedBuffBits(buffIter * iter);

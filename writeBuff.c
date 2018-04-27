@@ -63,7 +63,16 @@ void pushToWriteBuff(writeBuff * wBuff, uint64_t toWrite){
 
 
 //Write the last of what we have to the file
-void closeBuff(writeBuff *wBuff){
+void closeWriteBuff(writeBuff *wBuff){
+
+    //We want to take all the bytes we have and write them
+    unsigned int numBytesToWrite = (wBuff->currBit / 8) + ((wBuff->currBit % 8) ? 1 : 0);
+
+    for(int i = 1; i <= numBytesToWrite; ++i){
+	unsigned char chunk = (wBuff->buff >> (64 - i*8)) & 0xFF;
+
+	fputc(chunk, wBuff->file);	
+    }
 
 }
 

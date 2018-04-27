@@ -29,7 +29,7 @@ typedef struct{
 
 void initWriteBuff(writeBuff * wBuff, FILE * file, unsigned int keySize);
 void pushToWriteBuff(writeBuff * wBuff, uint64_t toWrite);
-void closeBuff(writeBuff * wBuff);
+void closeWriteBuff(writeBuff * wBuff);
 
 
 #endif
