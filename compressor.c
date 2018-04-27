@@ -108,6 +108,7 @@ int main(int argc, char * argv[]){
     writeBuff metaWriter;
     writeBuff dataWriter;
     unsigned long int lastPos = 0;
+    unsigned long int unusedBits = 0;
 
     initWriteBuff(&metaWriter, metaFile, keySize);
     initWriteBuff(&dataWriter, dataFile, keySize);
@@ -116,7 +117,7 @@ int main(int argc, char * argv[]){
     while(fread(buffer, BUFFER_SIZE, 1, inputFile) == 1){	
 	unsigned long int currPos = ftell(inputFile);
 
-	initBuffIter(&myIter, buffer, BUFFER_SIZE, keySize);
+	initBuffIter(&myIter, buffer, BUFFER_SIZE, keySize, unusedBits);
 
 	//Print the buffer contents
 	fwrite(buffer, sizeof(char), currPos-lastPos, stdout);
@@ -127,7 +128,6 @@ int main(int argc, char * argv[]){
 	uint64_t last = 0;
 	uint64_t count = 1;
 	uint64_t bitIdx = keySize;
-
 
 	advance(&myIter, &next);
 	//printf("Step %lu Read in %" PRIx64 "\n", myIter.currStep, next);
@@ -154,14 +154,8 @@ int main(int argc, char * argv[]){
 	//Keep in mind that the writeBuff still has to post its contents
 	//just move on to the next buffer and continue it from there
 	
-	//When it has run out, we need to grab the next buffer
-	//but need to correctly offset it to account for the
-	//bits we never used from this last buffer.
-
-	return 0;
-
-	//printf("\n");
-
+	unusedBits = unusedBuffBits(&myIter);
+	
 	lastPos = ftell(inputFile);
     }    
     if(feof(inputFile)){

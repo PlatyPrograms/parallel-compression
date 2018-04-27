@@ -9,38 +9,34 @@
 void initBuffIter(buffIter * iter, 
 		  unsigned char * buffer, 
 		  unsigned long int bufferSize,
-		  unsigned long int bitStepSize){
+		  unsigned long int bitStepSize,
+		  unsigned long int startBitOffset){
 
     iter->buff = buffer;
-    iter->currStep = 0;
-    iter->bitStep = bitStepSize;    
     iter->buffSize = bufferSize;
+    iter->stepSize = bitStepSize;
 
+    iter->currBit = startBitOffset;
+    iter->startBitOffset = startBitOffset;
 }
 
 bool iterHasNext(buffIter * iter){
 
-    //Try to get the next set of bits
-    unsigned long int currBitInBuff = (iter->currStep)*(iter->bitStep);
-
     //If we can advance in the bits
-    return ((currBitInBuff + (iter->bitStep)) <= (iter->buffSize)*8);
+    return ((iter->currBit + (iter->stepSize)) <= (iter->buffSize)*8);
     
 }
 
 
 void advance(buffIter * iter, uint64_t * result){
 
-    //Try to get the next set of bits
-    unsigned long int currBitInBuff = (iter->currStep)*(iter->bitStep);
-
     //If we can advance in the bits, then do so
-    if((currBitInBuff + (iter->bitStep)) <= (iter->buffSize)*8){
+    if((iter->currBit + (iter->stepSize)) <= (iter->buffSize)*8){
 	
 	//Current bit and next bit are guaranteed to be in the same
 	//uint64_t because the the keySize is guaranteed to be <= 64
 
-	unsigned char * ptr = &(iter->buff[currBitInBuff / 8]);
+	unsigned char * ptr = &(iter->buff[iter->currBit / 8]);
 	//printf("Address of step: %p\n", ptr);
 	uint64_t container = 0; 
 
@@ -56,23 +52,23 @@ void advance(buffIter * iter, uint64_t * result){
 
 	//printf("Container    " "%" PRIx64 "\n", container);
 
-	unsigned int nextBitInCntnr = (currBitInBuff % 8) + (iter->bitStep);
+	unsigned int nextBitInCntnr = (iter->currBit % 8) + (iter->stepSize);
 
 	//Shift to the right
 	container = (container >> (64 - nextBitInCntnr));
 
 	//Then shift back to the left
-	container = (container << (64 - iter->bitStep));
+	container = (container << (64 - iter->stepSize));
 
 	//printf("Putting out: %" PRIx64 "\n\n", container);
 
 	*result = container;
 
-	iter->currStep += 1;
+	iter->currBit += iter->stepSize;
     }
 }
 
 unsigned long int unusedBuffBits(buffIter * iter){
 
-    return (8 * iter->buffSize) - (iter->currStep)*(iter->bitStep);
+    return (8 * iter->buffSize) - (iter->currBit);
 }
