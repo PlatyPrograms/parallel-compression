@@ -48,11 +48,11 @@ void put(FILE* stream, uint64_t toPut, unsigned char* used,
   // writes size number of bits to a stream
   unsigned char left = size; // bits still to write
   uint64_t mask;
-  printf("putting\n");
-  printf("used: %hhx\n", *used);
-  printf("cur: %hhx\n", *cur);
+  /* printf("putting\n"); */
+  /* printf("used: %hhx\n", *used); */
+  /* printf("cur: %hhx\n", *cur); */
   while (left > 0) { // while there are still bits to write
-    printf("left: %i\n", (int) left);
+    // printf("left: %i\n", (int) left);
     if (left < (8 - *used)) {
       // if there is enough space in cur for the rest of the bits,
       // put remaining bits of toPut into cur

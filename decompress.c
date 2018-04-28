@@ -1,4 +1,5 @@
 #include "common.h"
+#include <string.h>
 
 void getMetaData(FILE* meta, FILE* data, unsigned char* mUsed,
                  unsigned char* dUsed, unsigned char* mCur,
@@ -36,12 +37,14 @@ void decompress(FILE* meta, FILE* data, FILE* out,
       for (j = 0; j < run; ++j) {
         // iterate through unique keys, writing them to the file
         key = get(data, dUsed, dCur, keyLen);
+        //printf("key: %" PRIx64 "\n", key);
         put(out, key, &oUsed, &oCur, keyLen);
       }
     }
     // "proper" run (repetition of the same key)
     else {
       key = get(data, dUsed, dCur, keyLen);
+      //printf("key: %" PRIx64 "\n", key);
       for (j = 0; j < run; ++j) {
         // write the key as many times as the meta file says to
         put(out, key, &oUsed, &oCur, keyLen);
@@ -51,15 +54,23 @@ void decompress(FILE* meta, FILE* data, FILE* out,
 }
 
 int main(int argc, char** argv) {
-  if (argc != 2) {
-    printf("usage: ./decompress [output name]\n");
+  if (argc != 3) {
+    printf("usage: ./decompress [input name] [output name]\n");
     return -1;
   }
 
   // get input files
-  FILE* data = fopen("data", "rb");
-  FILE* meta = fopen("meta", "rb");
-  FILE* out = fopen(argv[1], "wb");
+
+  char* dataName = malloc(sizeof(argv[1]) + 5);
+  char* metaName = malloc(sizeof(argv[1]) + 5);
+  memmove(dataName, argv[1], sizeof(argv[1]));
+  memmove(metaName, argv[1], sizeof(argv[1]));
+  strcat(dataName, ".data");
+  strcat(metaName, ".meta");
+  
+  FILE* data = fopen(dataName, "rb");
+  FILE* meta = fopen(metaName, "rb");
+  FILE* out = fopen(argv[2], "wb");
 
   // variables for tracking relevant features of files
   uint64_t numRuns;
@@ -68,6 +79,8 @@ int main(int argc, char** argv) {
   // actually do work
   getMetaData(meta, data, &mUsed, &dUsed, &mCur, &dCur, &runLen, &keyLen,
               &numRuns);
+  printf("numRuns: %" PRIu64 " | runLen: %u | keyLen: %u\n", numRuns, runLen,
+         keyLen);
   decompress(meta, data, out, &mUsed, &dUsed, &mCur, &dCur, runLen, keyLen,
              numRuns);
 

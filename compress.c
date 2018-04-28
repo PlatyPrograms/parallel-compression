@@ -104,9 +104,9 @@ int main(int argc, char** argv) {
     ++compLen;
   }
   put(meta, compLen, &mUsed, &mCur, 48);
-  printf("hi\n");
+  //printf("hi\n");
   put(meta, runLen, &mUsed, &mCur, 8);
-  printf("numRuns: %" PRIu64 "\n", numRuns);
+  //printf("numRuns: %" PRIu64 "\n", numRuns);
   for (i = 0; i < compLen; ++i) {
     put(meta, compMetaArray[i], &mUsed, &mCur, runLen);
   }
