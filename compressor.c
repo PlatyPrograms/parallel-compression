@@ -44,15 +44,15 @@ int main(int argc, char * argv[]){
     size_t inputNameLength, cutoff;
     
     if(argc != 3){
-	//fprintf(stderr, "Invalid number of input arguments. Got %d, expected 2.\n", (argc-1));
-	//fprintf(stderr, "Expected Arguments:\n(1) Input File Name\n(2) Key size in bitse\n");
+	fprintf(stderr, "Invalid number of input arguments. Got %d, expected 2.\n", (argc-1));
+	fprintf(stderr, "Expected Arguments:\n(1) Input File Name\n(2) Key size in bitse\n");
 	return -1;
     }
 
     sscanf(argv[2], "%d", &keySize);
 
     if(keySize < 1 || keySize > 64){
-	//fprintf(stderr, "Invalid key size \"%d\"; must be in range of [1, 64]", keySize);
+	fprintf(stderr, "Invalid key size \"%d\"; must be in range of [1, 64]", keySize);
 	return -1;
     }
 
@@ -75,8 +75,8 @@ int main(int argc, char * argv[]){
     strcat(metaFileName, ".meta");    
     
     //Print some updates for the user
-    //printf("Producing files named: %s and %s\n", dataFileName, metaFileName);
-    //printf("keySize = %d bits \n", keySize);
+    printf("Producing files named: %s and %s\n", dataFileName, metaFileName);
+    printf("keySize = %d bits \n", keySize);
 
     //Now let's create the files we will read and write to
     inputFile = fopen(inputFileName, "rb");
@@ -84,19 +84,19 @@ int main(int argc, char * argv[]){
     metaFile  = fopen(metaFileName,  "wb");
     
     if(!inputFile){
-	//fprintf(stderr, "Error opening input file \"%s\"\n", inputFileName);
+	fprintf(stderr, "Error opening input file \"%s\"\n", inputFileName);
 	return -1;
     }    
 
     if(!dataFile || !metaFile){
-	//fprintf(stderr, "Error creating data and meta files\n");
+	fprintf(stderr, "Error creating data and meta files\n");
 	return -1;
     }    
 
     unsigned char *buffer = malloc(sizeof(unsigned char)*BUFFER_SIZE);
 
     if(!buffer){
-	//fprintf(stderr, "Error allocating read buffer, not enough memory!\n");
+	fprintf(stderr, "Error allocating read buffer, not enough memory!\n");
 	return -1;
     }
 
@@ -186,6 +186,10 @@ int main(int argc, char * argv[]){
 
     if(feof(inputFile)){
 	unsigned long int bytesLeft = ftell(inputFile) - lastPos;
+
+	if(counts.n == 0){
+	    --count;
+	}
 	
 	//Print the buffer contents
 	//fwrite(buffer, sizeof(char), bytesLeft, stdout);
@@ -194,7 +198,7 @@ int main(int argc, char * argv[]){
 
 	while(iterHasNext(&myIter)){    
 	   
-	    //last = next;
+	    last = next;
 	    advance(&myIter, &next);
 	    //printf("END next is: %" PRIx64 "\n", next);
 
@@ -212,7 +216,7 @@ int main(int argc, char * argv[]){
 		//printf("END Buffer post push: %" PRIx64 "\n", dataWriter.buff);
 		count = 1;
 	    }
-	    last = next;
+	    //last = next;
 	}
     }
     
@@ -221,7 +225,7 @@ int main(int argc, char * argv[]){
     //Now calculate the min bit size for the biggest element of the array.
     unsigned int numBits = 64;
 
-    //printf("Biggest run is: %" PRIu64 "\n", counts.biggest);
+    printf("Biggest run is: %" PRIu64 "\n", counts.biggest);
     //printf("We got %lu runs!\n", counts.n);
 
     for(unsigned int i = 0; i < 64; ++i){
@@ -232,7 +236,7 @@ int main(int argc, char * argv[]){
 	}
     }
 
-    //printf("Min num of bits is: %lu\n", numBits);
+    printf("Min num of bits is: %lu\n", numBits);
 
     //printf("Our array has %lu elements\n", counts.n);
     //Write the num of bits to the meta file
