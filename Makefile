@@ -1,6 +1,8 @@
 
 CC = gcc
 
+MPICC = 
+
 CFLAGS = -O3 --std=c99
 
 TARGETS = compressor
@@ -11,6 +13,8 @@ all : ${TARGETS}
 compressor : compressor.o common.o buffIter.o writeBuff.o u64array.o
 	${CC} ${CFLAGS} -o $@ $^
 
+testmpi : testmpi.c
+	${MPICC} ${CFLAGS} -o $@ $^
 
 
 compressor.o : compressor.c
