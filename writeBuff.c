@@ -2,12 +2,14 @@
 #include "writeBuff.h"
 #include "common.h"
 
-void initWriteBuff(writeBuff * wBuff, FILE * file, unsigned int keySize){
+void initWriteBuff(writeBuff * wBuff, FILE * file, unsigned int keySize, unsigned int bitsAtEnd){
 
     wBuff->file = file;
     wBuff->keySize = keySize;
     wBuff->currBit = 0;
     wBuff->buff = 0;
+    wBuff->bitsAtEnd = bitsAtEnd;
+    
 }
 
 void pushToWriteBuff(writeBuff * wBuff, uint64_t toWrite){
@@ -18,8 +20,12 @@ void pushToWriteBuff(writeBuff * wBuff, uint64_t toWrite){
 	
 	//Shift the toWrite elements into place
 	//Then add the current buffer and toWrite
-
-	toWrite = toWrite >> wBuff->currBit;
+	if(wBuff->bitsAtEnd){
+	    toWrite = toWrite << wBuff->currBit;
+	}
+	else{
+	    toWrite = toWrite >> wBuff->currBit;
+	}
 	
 	wBuff->buff += toWrite;
 	
@@ -36,11 +42,17 @@ void pushToWriteBuff(writeBuff * wBuff, uint64_t toWrite){
 	//printf("input to deal with: %" PRIx64 "\n", toWrite);
 
 	if(avalBits != 0){
-	    uint64_t toAdd = (toWrite >> (wBuff->currBit));
+	    //uint64_t toAdd = (toWrite >> (wBuff->currBit));
 	    //printf("Shifted toAdd by %lu bits\n", wBuff->currBit);
 	    //printf("toAdd val: %" PRIx64 "\n", toAdd);
 
-	    wBuff->buff += toAdd;
+	    //wBuff->buff += toAdd;
+	    if(wBuff->bitsAtEnd){
+		wBuff->buff += (toWrite << (wBuff->currBit));
+	    }
+	    else{
+		wBuff->buff += (toWrite >> (wBuff->currBit));
+	    }
 	}
 
 	//printf("Calling write function: giving  " "%" PRIx64 "\n", wBuff->buff);
@@ -51,8 +63,15 @@ void pushToWriteBuff(writeBuff * wBuff, uint64_t toWrite){
 	//Reset the buff
 	wBuff->buff = 0;
 
-	uint64_t leftoverBits = (toWrite << avalBits);
-	wBuff->buff += leftoverBits;
+	//uint64_t leftoverBits = (toWrite << avalBits);
+	//wBuff->buff += leftoverBits;
+
+	if(wBuff->bitsAtEnd){
+	    wBuff->buff += (toWrite >> avalBits);
+	}
+	else{
+	    wBuff->buff += (toWrite << avalBits);
+	}
 
 	//printf("Next buffer is: %" PRIx64 "\n", wBuff->buff);
 
