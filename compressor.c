@@ -243,7 +243,6 @@ int main(int argc, char * argv[]){
     //For each array element convert it to the numBits format,
     //string them together to then write them as chars.
     
-    
 
     //Close the files after we use them
     fclose(inputFile);
