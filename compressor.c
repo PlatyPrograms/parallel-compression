@@ -15,7 +15,7 @@
  *
  */
 
-void initMetaFile(FILE * metaFile, unsigned int keySize){
+void initMetaFile(FILE * metaFile, unsigned int lengthOfRunInBits){
 
     //Write first 48 bits as all zeros
     fputc(0, metaFile);
@@ -25,8 +25,8 @@ void initMetaFile(FILE * metaFile, unsigned int keySize){
     fputc(0, metaFile);
     fputc(0, metaFile);
 
-    //Write next 8 bits as keySize
-    fputc((int) keySize, metaFile);
+    //Write next 8 bits as the length of a run in bits
+    fputc((int) lengthOfRunInBits, metaFile);
 }
 
 
@@ -101,7 +101,7 @@ int main(int argc, char * argv[]){
 	return -1;
     }
 
-    initMetaFile(metaFile, keySize);
+    initMetaFile(metaFile, 8);
     initDataFile(dataFile, keySize);
 
     buffIter myIter;
@@ -114,12 +114,15 @@ int main(int argc, char * argv[]){
     uint64_t last = 0;
     uint64_t count = 1;
 
+    u64array counts;
+
     size_t validRead = fread(buffer, BUFFER_SIZE, 1, inputFile);
 
     initWriteBuff(&metaWriter, metaFile, keySize);
     initWriteBuff(&dataWriter, dataFile, keySize);
     initBuffIter(&myIter, buffer, BUFFER_SIZE, keySize);
-    
+    u64array_init(&counts);
+
     advance(&myIter, &next);	
     last = next;
 
@@ -145,6 +148,8 @@ int main(int argc, char * argv[]){
 	    else{
 		printf("Pushing to write %" PRIx64 "\n", last);
 		printf("Counted: %" PRIu64 "\n", count);
+		//fputc(count & 0xFF, metaFile);
+		u64array_push_back(&counts, count);
 		pushToWriteBuff(&dataWriter, last);
 		printf("Buffer post push: %" PRIx64 "\n", dataWriter.buff);
 		count = 1;
@@ -204,16 +209,41 @@ int main(int argc, char * argv[]){
 	    else{
 		printf("END Pushing to write %" PRIx64 "\n", last);
 		printf("END Counted: %" PRIu64 "\n", count);
+		//fputc(count & 0xFF, metaFile);
+		u64array_push_back(&counts, count);
 		pushToWriteBuff(&dataWriter, last);
 		printf("END Buffer post push: %" PRIx64 "\n", dataWriter.buff);
 		count = 1;
 	    }
 	    last = next;
 	}
-
     }
     
     closeWriteBuff(&dataWriter);
+
+    //Now calculate the min bit size for the biggest element of the array.
+    unsigned int numBits = 64;
+
+    printf("Biggest run is: %" PRIu64 "\n", counts.biggest);
+    printf("We got %lu runs!\n", counts.n);
+
+    for(unsigned int i = 0; i < 64; ++i){
+	
+	if((counts.biggest << i) & 0x8000000000000000){
+	    numBits = 64 - i;
+	    break;
+	}
+    }
+
+    printf("Min num of bits is: %lu\n", numBits);
+
+    //Now write the array elements to the meta file at the given bit level
+    //Create chars of the elements.
+
+    //For each array element convert it to the numBits format,
+    //string them together to then write them as chars.
+    
+    
 
     //Close the files after we use them
     fclose(inputFile);
@@ -224,6 +254,7 @@ int main(int argc, char * argv[]){
     free(dataFileName);
     free(metaFileName);
     free(buffer);
+    free(counts.data);
     
     return 0;
 }
