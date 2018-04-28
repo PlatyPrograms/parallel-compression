@@ -184,12 +184,12 @@ int main(int argc, char * argv[]){
 	setStartOffset(&myIter, unusedBits);
     }
 
+    if(counts.n == 0){
+	    --count;
+    }
+
     if(feof(inputFile)){
 	unsigned long int bytesLeft = ftell(inputFile) - lastPos;
-
-	if(counts.n == 0){
-	    --count;
-	}
 	
 	//Print the buffer contents
 	//fwrite(buffer, sizeof(char), bytesLeft, stdout);
