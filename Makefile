@@ -1,11 +1,11 @@
 
 CC = gcc
 
-MPICC = 
+MPICC = mpicc
 
-CFLAGS = -O3 --std=c99
+CFLAGS = -O3 --std=c99 -lm
 
-TARGETS = compressor
+TARGETS = compressor testmpi
 
 all : ${TARGETS}
 
