@@ -12,9 +12,6 @@
 //BUFFER_SIZE must be greater than or equal to 16
 #define BUFFER_SIZE 200
 
-//"You are on this council but we do not grant you the rank of master."
-#define MASTER_RANK 0
-
 //The maximum key size in bits
 #define MAX_KEY_SIZE 64
 

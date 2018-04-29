@@ -10,14 +10,14 @@ all : ${TARGETS}
 
 
 compressor : compressor.o common.o buffIter.o writeBuff.o u64array.o
-	${CC} ${CFLAGS} -o $@ $^
+	${MPICC} ${CFLAGS} -o $@ $^
 
 testmpi : testmpi.c
 	${MPICC} ${CFLAGS} -o $@ $^
 
 
 compressor.o : compressor.c
-	${CC} ${CFLAGS} -o $@ -c $^
+	${MPICC} ${CFLAGS} -o $@ -c $^
 
 commmon.o : common.c
 	${CC} ${CFLAGS} -o $@ -c $^

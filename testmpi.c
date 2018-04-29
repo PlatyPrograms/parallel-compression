@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <mpi.h>
 
-
 #define ROOT_RANK 0
 
 int main(int argc, char** argv){

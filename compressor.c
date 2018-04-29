@@ -6,73 +6,89 @@
  *  
  * 1) Input File Name --- File to Compress
  * 2) Key size --- Number of bits to encode at a time
- * 3) Number of decompress threads --- Number of threads used for decompression
+ * 3) Number of decompress proccessess --- Number of processes used for decompression
  *
  */
 
-
 int main(int argc, char * argv[]){
 
+    int NUMPROCS, MYRANK; 
+    MPI_Status status;
+    MPI_Init( &argc, &argv );
+    MPI_Comm_size( MPI_COMM_WORLD, &NUMPROCS );
+    MPI_Comm_rank( MPI_COMM_WORLD, &MYRANK );
+
     char *inputFileName, *dataFileName, *metaFileName;
-    unsigned int keySize, numDthreads;
+    unsigned int keySize, numDprocs;
     FILE *inputFile, *dataFile, *metaFile;
     size_t inputNameLength, cutoff;
     
-    if(argc != 4){
+    if(MYRANK == MASTER_RANK && argc != 4){
 	fprintf(stderr, "Invalid number of input arguments. Got %d, expected 3.\n", (argc-1));
-	fprintf(stderr, "Expected Arguments:\n(1) Input File Name\n(2) Key size in bitse\n(3) Number of threads in decompression\n");
+	fprintf(stderr, "Expected Arguments:\n(1) Input File Name\n(2) Key size in bitse\n(3) Number of processes in decompression\n");
 	return -1;
     }
 
     sscanf(argv[2], "%d", &keySize);
-    sscanf(argv[3], "%d", &numDthreads);
+    sscanf(argv[3], "%d", &numDprocs);
 
-    if(keySize < 1 || keySize > 64){
-	fprintf(stderr, "Invalid key size \"%d\"; must be in range of [1, 64]", keySize);
-	return -1;
+    //Let the master proc do the fileIO and sanity checks
+    if(MYRANK == MASTER_RANK){
+	
+	if(keySize < 1 || keySize > 64){
+	    fprintf(stderr, "Invalid key size \"%d\"; must be in range of [1, 64]", keySize);
+	    return -1;
+	}
+
+	if(numDprocs < 1){
+	    fprintf(stderr, "Invalid number of decompress processes given \"%d\"; must be greater than zero.");
+	}	
+	
+	inputFileName = argv[1];
+	inputNameLength = strlen(inputFileName);
+
+	//Get the number of chars to take before the
+	//first '.' of the given inputFileName
+	cutoff = (strchr(inputFileName, '.')) - &(inputFileName[0]);
+    
+	dataFileName = (char *) malloc(sizeof(char)*(cutoff+5));
+	metaFileName = (char *) malloc(sizeof(char)*(cutoff+5));
+
+	//Make a copy of the input file name with
+	//all the chars before the '.' extension
+	memmove(dataFileName, inputFileName, cutoff);
+	memmove(metaFileName, inputFileName, cutoff);
+
+	strcat(dataFileName, ".data");
+	strcat(metaFileName, ".meta");    
+    
+	//Print some updates for the user
+	printf("Producing files named: %s and %s\n", dataFileName, metaFileName);
+	printf("Reading with keySize of %d bits \n", keySize);
+	printf("Number of decompress procs = %d \n", numDprocs);
+
+	//Now let's create the files we will read and write to
+	inputFile = fopen(inputFileName, "rb");
+	dataFile  = fopen(dataFileName,  "wb");
+	metaFile  = fopen(metaFileName,  "wb");
+    
+	if(!inputFile){
+	    fprintf(stderr, "Error opening input file \"%s\"\n", inputFileName);
+	    return -1;
+	}    
+
+	if(!dataFile || !metaFile){
+	    fprintf(stderr, "Error creating data and meta files\n");
+	    return -1;
+	}
     }
 
-    inputFileName = argv[1];
-    inputNameLength = strlen(inputFileName);
-
-    //Get the number of chars to take before the
-    //first '.' of the given inputFileName
-    cutoff = (strchr(inputFileName, '.')) - &(inputFileName[0]);
-    
-    dataFileName = (char *) malloc(sizeof(char)*(cutoff+5));
-    metaFileName = (char *) malloc(sizeof(char)*(cutoff+5));
-
-    //Make a copy of the input file name with
-    //all the chars before the '.' extension
-    memmove(dataFileName, inputFileName, cutoff);
-    memmove(metaFileName, inputFileName, cutoff);
-
-    strcat(dataFileName, ".data");
-    strcat(metaFileName, ".meta");    
-    
-    //Print some updates for the user
-    printf("Producing files named: %s and %s\n", dataFileName, metaFileName);
-    printf("keySize = %d bits \n", keySize);
-    printf("numDthreads = %d \n", numDthreads);
-
-    //Now let's create the files we will read and write to
-    inputFile = fopen(inputFileName, "rb");
-    dataFile  = fopen(dataFileName,  "wb");
-    metaFile  = fopen(metaFileName,  "wb");
-    
-    if(!inputFile){
-	fprintf(stderr, "Error opening input file \"%s\"\n", inputFileName);
-	return -1;
-    }    
-
-    if(!dataFile || !metaFile){
-	fprintf(stderr, "Error creating data and meta files\n");
-	return -1;
-    }    
+    //Make sure all is good with input params before continuing
+    MPI_Barrier(MPI_COMM_WORLD);
 
     unsigned char *buffer = malloc(sizeof(unsigned char)*BUFFER_SIZE);
 
-    if(!buffer){
+    if(MYRANK == MASTER_RANK && !buffer){
 	fprintf(stderr, "Error allocating read buffer, not enough memory!\n");
 	return -1;
     }
@@ -145,7 +161,7 @@ int main(int argc, char * argv[]){
     }
 
     if(counts.n == 0){
-	    --count;
+	--count;
     }
 
     //When we hit the end of the file, yet still need to process
