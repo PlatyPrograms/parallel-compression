@@ -1,4 +1,8 @@
 
+
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +18,17 @@
 //"You are on this council but we do not grant you the rank of master."
 #define MASTER_RANK 0
 
-void initMetaFile(FILE * metaFile, unsigned int lengthOfRunInBits, unsigned long int numRuns, unsigned int numDprocs){
+const char data[5] = ".data";
+const char meta[5] = ".meta";
+
+//Used to convert integers to strings
+char num[20];
+
+
+void initMetaFile(FILE * metaFile, 
+		  unsigned int lengthOfRunInBits, 
+		  unsigned long int numRuns, 
+		  unsigned int numDprocs){
 
     //Write first 8 bits as number of processes to use
     //during the decompression.
@@ -30,12 +44,6 @@ void initMetaFile(FILE * metaFile, unsigned int lengthOfRunInBits, unsigned long
     //Write next 8 bits as the length of a run in bits
     fputc((int) lengthOfRunInBits, metaFile);
 
-    //Setup the next numDprocs*8 bytes for storing numDprocs*64 bits
-    //where each 64 bits contains a META file pointer
-    for(int i = 0; i < numDprocs*8; ++i){
-	fputc(0, metaFile);
-    }
-
 }
 
 
@@ -46,7 +54,12 @@ void initDataFile(FILE * dataFile, unsigned int keySize){
 }
 
 
-
+unsigned long int getFileSize(char * filename){
+    
+    struct stat buff;
+    stat(filename, &buff);
+    return buff.st_size;    
+}
 
 
 #endif

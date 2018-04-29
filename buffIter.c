@@ -24,15 +24,15 @@ void setStartOffset(buffIter * iter, unsigned long int startBitOffset){
 bool iterHasNext(buffIter * iter){
 
     //If we can advance in the bits
-    return ((iter->currBit + (iter->stepSize)) <= (iter->buffSize)*8);
+    return ((iter->currBit + (iter->stepSize)) <= (iter->buffSize)*8 + iter->stepSize);
     
 }
 
 
 void advance(buffIter * iter, uint64_t * result){
 
-    //If we can advance in the bits, then do so
-    if((iter->currBit + (iter->stepSize)) <= (iter->buffSize)*8){
+    //If we can advance in the bits, then do so. I think I fixed this...
+    if((iter->currBit + (iter->stepSize)) <= (iter->buffSize)*8 + (iter->stepSize)){
 	
 	//Current bit and next bit are guaranteed to be in the same
 	//uint64_t because the the keySize is guaranteed to be <= 64
