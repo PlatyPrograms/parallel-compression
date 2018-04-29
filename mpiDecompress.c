@@ -98,7 +98,6 @@ int main(int argc, char** argv) {
   
   FILE* data = fopen(dataName, "rb");
   FILE* meta = fopen(metaName, "rb");
-  // FILE* out = fopen(argv[2], "wb");
 
   // variables for tracking relevant features of files
   uint64_t numRuns;
@@ -113,25 +112,55 @@ int main(int argc, char** argv) {
   }
   printf("numRuns: %" PRIu64 " | runLen: %u | keyLen: %u\n", numRuns,
   	 runLen, keyLen);
-  uint64_t numBits = numRuns * runLen;
-  numBytes = numBits / 8;
-  ++numBytes;
+  uint64_t numSlices, run;
+  for (i = 0; i < numRuns; ++i) {
+    run = get(meta, &mUsed, &mCur, runLen);
+    if (run != 0) {
+      numSlices += run;
+    }
+  }
+  // reset meta
+  fseek(meta, 9, SEEK_SET);
+  mUsed = 0;
+  mCur = fgetc(meta);
+  
+  uint64_t numBits = numSlices * runLen;
+  uint64_t numBytes = (numBits / 8) + 1;
   char* outBuf = malloc(sizeof(char) * numBytes);
-  decompress(meta, data, out, &mUsed, &dUsed, &mCur, &dCur, runLen,
+  
+  decompress(meta, data, outBuf, &mUsed, &dUsed, &mCur, &dCur, runLen,
   	     keyLen, numRuns);
 
   if (rank == 0) {
+    FILE* out = fopen(argv[2], "wb");
     // write to out file
-    int i;
-    for (i = 1; i < nProcs; ++i) {
+    fwrite(outBuf, 1, (numBytes-1), out); // -1 because of tail
+    int inBytes;
+    char* inBuf;
+    for (i = 1; i < nProc; ++i) {
       // recieve from i, write data
+      MPI_Recv(&inBytes, 1, MPI_INT, i, i, MPI_COMM_WORLD,
+	       MPI_STATUS_IGNORE);
+      --inBytes;
+      inBuf = malloc(sizeof(char) * inBytes);
+      MPI_Recv(inBuf, inBytes, MPI_CHAR, i, i, MPI_COMM_WORLD,
+	       MPI_STATUS_IGNORE);
+      fwrite(inBuf, 1, inBytes, out);
+      free(inBuf);
     }
+    fclose(out);
   }
-
+  // send decompressed data back to master for writing
+  else {
+    MPI_Send(&numBytes, 1, MPI_INT, 0, rank, MPI_COMM_WORLD);
+    MPI_Send(outBuf, (numBytes-1), MPI_CHAR, 0, rank, MPI_COMM_WORLD);
+  }
+  
   // tidy up
+  free(outBuf);
+  
   fclose(data);
   fclose(meta);
-  fclose(out);
 
   MPI_Finalize();
   return 0;
