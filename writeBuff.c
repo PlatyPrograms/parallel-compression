@@ -78,6 +78,5 @@ void closeWriteBuff(writeBuff *wBuff){
 
 	fputc(chunk, wBuff->file);	
     }
-
 }
 
