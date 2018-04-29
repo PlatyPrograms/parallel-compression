@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
   
   getMetaData(meta, data, &mUsed, &dUsed, &mCur, &dCur, &runLen, &keyLen,
               &numRuns, &expProcs);
-  if (nProc < expProcs) {
+  if (nProc != expProcs) {
     printf("ERROR: expected %i processes, got %i\n", expProcs, nProc);
     MPI_Abort(MPI_COMM_WORLD, MPI_ERR_RANK);
   }
@@ -152,13 +152,14 @@ int main(int argc, char** argv) {
     MPI_Send(&numBytes, 1, MPI_INT, 0, rank, MPI_COMM_WORLD);
     MPI_Send(outBuf, (numBytes-1), MPI_CHAR, 0, rank, MPI_COMM_WORLD);
   }
-  
   // tidy up
   free(outBuf);
   
   fclose(data);
   fclose(meta);
 
+  printf("process %i done!\n", rank);
+  
   MPI_Finalize();
   return 0;
 }
