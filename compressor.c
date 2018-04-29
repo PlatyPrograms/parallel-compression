@@ -116,7 +116,7 @@ int main(int argc, char * argv[]){
 
     size_t validRead = fread(buffer, BUFFER_SIZE, 1, inputFile);
 
-    initWriteBuff(&dataWriter, dataFile, keySize, 0);
+    initWriteBuff(&dataWriter, dataFile, keySize);
     initBuffIter(&myIter, buffer, BUFFER_SIZE, keySize);
     u64array_init(&counts);
 
@@ -247,7 +247,7 @@ int main(int argc, char * argv[]){
 
     //For each array element convert it to the numBits format,
     //string them together to then write them as chars.
-    initWriteBuff(&metaWriter, metaFile, numBits, 0);
+    initWriteBuff(&metaWriter, metaFile, numBits);
 
     //printf("Key size of meta writer is %lu\n", metaWriter.keySize);
 

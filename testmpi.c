@@ -18,6 +18,10 @@ int main(int argc, char** argv){
 
     printf("[%d] I am ready to work!\n", MYTHREAD);
 
+    if(MYTHREAD == ROOT_RANK){
+	printf("[%d]\tI am root!\n", MYTHREAD);
+    }
+
     MPI_Finalize();
 
     return 0;

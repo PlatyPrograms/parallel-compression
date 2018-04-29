@@ -24,12 +24,10 @@ typedef struct{
 
     unsigned int currBit;
     uint64_t buff;
-    
-    unsigned int bitsAtEnd;
 
 }writeBuff;
 
-void initWriteBuff(writeBuff * wBuff, FILE * file, unsigned int keySize, unsigned int bitsAtEnd);
+void initWriteBuff(writeBuff * wBuff, FILE * file, unsigned int keySize);
 void pushToWriteBuff(writeBuff * wBuff, uint64_t toWrite);
 void closeWriteBuff(writeBuff * wBuff);
 
