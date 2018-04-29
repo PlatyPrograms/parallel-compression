@@ -1,6 +1,5 @@
 
 CC = gcc
-
 MPICC = mpicc
 
 CFLAGS = -O3 --std=c99 -lm
@@ -33,14 +32,11 @@ u64array.o : u64array.c
 	${CC} ${CFLAGS} -o $@ -c $^
 
 
-fullclean :
-	make clean
-	make clearDM
-
 clean :
 	rm -f ${TARGETS}
 	rm -f *.o
 	rm -f *~
+	make clearDM
 
 clearDM :
 	rm -f *.data
