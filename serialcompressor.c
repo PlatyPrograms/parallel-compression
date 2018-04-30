@@ -16,7 +16,7 @@
  */
 
 //Measured in bytes
-#define BUFFER_SIZE 2000
+#define BUFFER_SIZE 20000
 
 void initMetaFile(FILE * metaFile, unsigned int lengthOfRunInBits, unsigned long int numRuns){
 
