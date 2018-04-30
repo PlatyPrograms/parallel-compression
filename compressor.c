@@ -215,6 +215,8 @@ int main(int argc, char * argv[]){
 	printf("[%d] My recvBuffSize is %lu\n", MYRANK,  recvBuffSize);
     }
 
+    MPI_Barrier(MPI_COMM_WORLD);
+    
 
     //Now that everyone has their buffers setup, lets send info around!
     if(MYRANK == MASTER_RANK){
@@ -247,7 +249,7 @@ int main(int argc, char * argv[]){
 	fread(fileBuffer, myBufferSize, 1, inputFile);
 
 	//Setup my buffer info
-	myBufferSize = bufferSize;
+	//myBufferSize = numChars;
 	myBuffer = fileBuffer;
 
     }
