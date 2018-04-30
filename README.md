@@ -30,14 +30,14 @@ Contains a 6-bit run size tag, followed by binary data, terminated by a double e
 
 Compress the nameofFile.txt file using a key size of 23. Note that the name of the given file should have an extension denoted by a '.'
 
-' ./compress nameOfFile.txt 23 '
+`./compress nameOfFile.txt 23`
 
     
 ### Serial Decompression
 
 Decompress the nameOfFile.data and nameOfFile.meta files. Note that the 'nameOfFile' should be without any extension.
 
-' ./decompress nameOfFile nameOfOutputFile.txt'
+`./decompress nameOfFile nameOfOutputFile.txt`
 
 ## Parallel Code
 
@@ -45,16 +45,11 @@ Decompress the nameOfFile.data and nameOfFile.meta files. Note that the 'nameOfF
 
 Compress the nameOfFile.txt file using a key size of 23 and '4' processes.
 
-'mpirun -n 4 ./compress nameOfFile.txt 23 '
+`mpirun -n 4 ./compress nameOfFile.txt 23`
 
 
 ### Parallel Decompression
 
 Decompress the nameOfFile#.data and nameOfFile#.meta files. Note that the 'nameOfFile' should be without any extension. Also note that the number of processes used for decompression must match the number of processes used for compresssion.
 
-' mpirun -n 4 ./decompress nameOfFile nameOfOutputFile.txt '
-
-
-
-
-
+`mpirun -n 4 ./decompress nameOfFile nameOfOutputFile.txt`
