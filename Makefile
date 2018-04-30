@@ -1,17 +1,24 @@
+CC=gcc
+MPI=mpicc
+CFLAGS=-O3
 
-CC = gcc
+all: decompress
 
-CFLAGS = --std=c99 -O3
+serial: decompress
 
-TARGETS = compressor
+parallel: mpiDecompress
 
-all : ${TARGETS}
+decompress: decompress.c common.o
+	$(CC) $(CFLAGS) decompress.c common.o -o decompress
 
+mpiDecompress: mpiDecompress.c mpiCommon.o
+	$(MPI) mpiDecompress.c mpiCommon.o -o mpiDecompress -lm
 
-compressor : compressor.c
-	${CC} ${CFLAGS} -o $@ $^
+common.o: common.c common.h
+	$(CC) $(CFLAGS) common.c -c
 
+mpiCommon.o: mpiCommon.c mpiCommon.h
+	$(MPI) mpiCommon.c -c
 
-clean :
-	rm -f ${TARGETS}
-	rm -f *.o
+clean:
+	rm -f *.o decompress compress mpiDecompress *.meta *.data
