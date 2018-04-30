@@ -21,4 +21,4 @@ mpiCommon.o: mpiCommon.c mpiCommon.h
 	$(MPI) mpiCommon.c -c
 
 clean:
-	rm -f *.o decompress compress mpiDecompress
+	rm -f *.o decompress compress mpiDecompress *.meta *.data

@@ -14,6 +14,7 @@ void getMetaData(FILE* meta, FILE* data, unsigned char* mUsed,
   *mUsed = *dUsed = 0;
   *mCur = fgetc(meta);
   *dCur = fgetc(data);
+  
   unsigned char expProcsSize = 8; // should be 1 bit, but time
   unsigned char tagSize = 8; // should be 6 bits, but time
   unsigned char numRunSize = 48;
@@ -73,8 +74,6 @@ int main(int argc, char** argv) {
   char rankStr[10];
   int rankLen = sprintf(rankStr, "%i", rank);
   
-  printf("my rank: %s | my rankLen: %i\n", rankStr, rankLen);
-  
   // get input files
   char* dataName = malloc(strlen(argv[1]) + 5 + rankLen);
   char* metaName = malloc(strlen(argv[1]) + 5 + rankLen);
@@ -92,11 +91,9 @@ int main(int argc, char** argv) {
   strncat(dataName, ".data", 5);
   strncat(metaName, ".meta", 5);
   
-  printf("data: %s | meta: %s\n", dataName, metaName);
-  
   FILE* data = fopen(dataName, "rb");
   FILE* meta = fopen(metaName, "rb");
-
+  
   // variables for tracking relevant features of files
   uint64_t numRuns;
   unsigned char expProcs, mUsed, dUsed, mCur, dCur, runLen, keyLen;
@@ -107,27 +104,30 @@ int main(int argc, char** argv) {
     printf("ERROR: expected %i processes, got %i\n", expProcs, nProc);
     MPI_Abort(MPI_COMM_WORLD, MPI_ERR_RANK);
   }
-  printf("numRuns: %" PRIu64 " | runLen: %u | keyLen: %u\n", numRuns,
-  	 runLen, keyLen);
   uint64_t numSlices, run;
+  numSlices = 0;
   for (i = 0; i < numRuns; ++i) {
     run = get(meta, &mUsed, &mCur, runLen);
-    if (run != 0) {
-      numSlices += run;
-    }
+    numSlices += run;
   }
   // reset meta
   fseek(meta, 8, SEEK_SET);
   mUsed = 0;
   mCur = fgetc(meta);
   
-  uint64_t numBits = numSlices * runLen;
+  uint64_t numBits = numSlices * keyLen;
   uint64_t numBytes = (numBits / 8) + 1;
   char* outBuf = malloc(sizeof(char) * numBytes);
+
+  if (rank == 0) { printf("got metadata, decompressing...\n"); }
   
   decompress(meta, data, outBuf, &mUsed, &dUsed, &mCur, &dCur, runLen,
   	     keyLen, numRuns);
 
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if (rank == 0) {printf("decompressed, writing...\n"); }
+  
   if (rank == 0) {
     FILE* out = fopen(argv[2], "wb");
     // write to out file
@@ -157,8 +157,6 @@ int main(int argc, char** argv) {
   
   fclose(data);
   fclose(meta);
-
-  printf("process %i done!\n", rank);
   
   MPI_Finalize();
   return 0;
