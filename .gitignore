@@ -2,3 +2,15 @@
 #*#
 .DS_Store
 long.txt
+# Ignore everything
+*
+# Whitelist anything that's a directory
+!*/
+# Whitelist important files, leave out object files and executables
+!*.c
+!*.h
+!*.py
+!*.txt
+!Makefile
+!README.md
+!.gitignore
