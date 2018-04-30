@@ -24,13 +24,15 @@ Contains a 6-bit run size tag, followed by binary data, terminated by a double e
 
 # Compiling and Running
 
-## Compilation
+## Compiling
 
 Invoking `make` will make both serial and parallel compression and decompression in the root directory.
 
 Invoking `make clean` removes all .meta, .data, .o, and executable files.
 
 To generate nicely compressable files, invoke `python genText.py [numBytes] [filename]`. This will generate a file name `filename` with the specified number of bytes.
+
+## Running
 
 To compress a file in serial, invoke
 
