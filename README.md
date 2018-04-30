@@ -49,3 +49,7 @@ To compress a file in parallel, invoke
 To decompress a file in parallel, invoke
 
 `mpirun -n [threads] ./decompress [fileName] [outputFileName]`
+
+# Division of Labor
+
+Gregory Bolet wrote the compression program, while Eric Andrews wrote decompression. The writeup and makefile were joint efforts.
