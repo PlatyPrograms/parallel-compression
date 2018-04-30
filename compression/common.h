@@ -1,4 +1,5 @@
 
+#include <sys/time.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,5 +30,9 @@ void u64array_size(u64array * arr, unsigned long int * toPut);
 
 
 void write64ToFile(FILE * file, uint64_t toWrite);
+void subtractTime(struct timeval* start,
+		  struct timeval* end,
+		  struct timeval* elapsed);
+
 
 #endif

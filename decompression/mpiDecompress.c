@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <mpi.h>
+#include <sys/time.h>
 
 void getMetaData(FILE* meta, FILE* data, unsigned char* mUsed,
                  unsigned char* dUsed, unsigned char* mCur,
@@ -71,6 +72,12 @@ int main(int argc, char** argv) {
   MPI_Comm_size(MPI_COMM_WORLD, &nProc);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+  struct timeval tvStart, tvEnd;
+  if(rank == 0){
+    gettimeofday(&tvStart, 0);
+  }
+  
+  
   char rankStr[10];
   int rankLen = sprintf(rankStr, "%i", rank);
   
@@ -152,6 +159,18 @@ int main(int argc, char** argv) {
     MPI_Send(&numBytes, 1, MPI_INT, 0, rank, MPI_COMM_WORLD);
     MPI_Send(outBuf, (numBytes-1), MPI_CHAR, 0, rank, MPI_COMM_WORLD);
   }
+
+
+  if (rank == 0) {
+    struct timeval elapsedTime;
+    gettimeofday(&tvEnd, 0);
+    subtractTime(&tvStart, &tvEnd, &elapsedTime);
+    printf("Elapsed time: %ld.%ld06\n", elapsedTime.tv_sec,
+	   elapsedTime.tv_usec);
+  }
+  
+  
+  
   // tidy up
   free(outBuf);
   

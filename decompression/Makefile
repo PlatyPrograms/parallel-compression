@@ -2,17 +2,17 @@ CC=gcc
 MPI=mpicc
 CFLAGS=-O3
 
-all: decompress
+all: decompress serialdecompress
 
-serial: decompress
+serial: serialdecompress
 
-parallel: mpiDecompress
+parallel: decompress
 
-decompress: decompress.c common.o
-	$(CC) $(CFLAGS) decompress.c common.o -o decompress
+serialdecompress: decompress.c common.o
+	$(CC) $(CFLAGS) decompress.c common.o -o ../serialdecompress
 
-mpiDecompress: mpiDecompress.c mpiCommon.o
-	$(MPI) mpiDecompress.c mpiCommon.o -o mpiDecompress -lm
+decompress: mpiDecompress.c mpiCommon.o
+	$(MPI) mpiDecompress.c mpiCommon.o -o ../decompress -lm
 
 common.o: common.c common.h
 	$(CC) $(CFLAGS) common.c -c

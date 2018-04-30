@@ -1,4 +1,5 @@
 
+#include <sys/time.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +42,10 @@ void initDataFile(FILE * dataFile, unsigned int keySize){
 
 int main(int argc, char * argv[]){
 
+  struct timeval tvStart, tvEnd;
+  gettimeofday(&tvStart, 0);
+
+  
     char *inputFileName, *dataFileName, *metaFileName;
     unsigned int keySize;
     FILE *inputFile, *dataFile, *metaFile;
@@ -238,6 +243,12 @@ int main(int argc, char * argv[]){
     }
 
     closeWriteBuff(&metaWriter);
+
+    struct timeval elapsedTime;
+    gettimeofday(&tvEnd, 0);
+    subtractTime(&tvStart, &tvEnd, &elapsedTime);
+    printf("Elapsed time: %ld.%ld06\n", elapsedTime.tv_sec,
+	   elapsedTime.tv_usec);
     
     //Close the files after we use them
     fclose(inputFile);

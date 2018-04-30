@@ -1,5 +1,7 @@
 #include "common.h"
 #include <string.h>
+#include <sys/time.h>
+#include <stdlib.h>
 
 void getMetaData(FILE* meta, FILE* data, unsigned char* mUsed,
                  unsigned char* dUsed, unsigned char* mCur,
@@ -59,6 +61,9 @@ int main(int argc, char** argv) {
     return -1;
   }
 
+  struct timeval tvStart, tvEnd;
+  gettimeofday(&tvStart, 0);  
+  
   // get input files
 
   /* char* dataName = malloc(sizeof(argv[1]) + 5); */
@@ -86,9 +91,15 @@ int main(int argc, char** argv) {
               &numRuns);
   printf("numRuns: %" PRIu64 " | runLen: %u | keyLen: %u\n", numRuns,
 	 runLen, keyLen);
-  decompress(meta, data, out, &mUsed, &dUsed, &mCur, &dCur, runLen, keyLen,
-             numRuns);
+  decompress(meta, data, out, &mUsed, &dUsed, &mCur, &dCur, runLen, keyLen, numRuns);
 
+  struct timeval elapsedTime;
+  gettimeofday(&tvEnd, 0);
+  subtractTime(&tvStart, &tvEnd, &elapsedTime);
+  printf("Elapsed time: %ld.%ld06\n", elapsedTime.tv_sec,
+	 elapsedTime.tv_usec);
+
+  
   // tidy up
   fclose(data);
   fclose(meta);
