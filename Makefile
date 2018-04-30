@@ -4,13 +4,16 @@ MPICC = mpicc
 
 CFLAGS = -O3 --std=c99 -lm
 
-TARGETS = compressor
+TARGETS = compressor serialcompressor
 
 all : ${TARGETS}
 
 
 compressor : compressor.o common.o buffIter.o writeBuff.o u64array.o
 	${MPICC} ${CFLAGS} -o $@ $^
+
+serialcompressor : serialcompressor.c common.o buffIter.o writeBuff.o u64array.o
+	${CC} ${CFLAGS} -o $@ $^
 
 
 compressor.o : compressor.c
