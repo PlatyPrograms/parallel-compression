@@ -48,6 +48,4 @@ To compress a file in parallel, invoke
 
 To decompress a file in parallel, invoke
 
-`mpirun -n [threads] ./decompress [fileName] [outputFileName]
-
-`mpirun -n 4 ./compress nameOfFile.txt 23`
+`mpirun -n [threads] ./decompress [fileName] [outputFileName]`
