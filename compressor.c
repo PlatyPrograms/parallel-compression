@@ -225,11 +225,12 @@ int main(int argc, char * argv[]){
 	    MPI_Abort(MPI_COMM_WORLD, -1);
 	}
 
-	//Send information to all the workers
-
+	unsigned int numChars = bufferSize - (inputFileSize % NUMPROCS);
+	fread(fileBuffer, numChars, 1, inputFile);
+	
 	//For each process (except the last), send it its work
 	for(int i = 1; i < numDprocs-1; ++i){
-	    unsigned int numChars = bufferSize - (inputFileSize % NUMPROCS);
+	    
 	    fread(fileBuffer, numChars, 1, inputFile);
 	    
 	    MPI_Send(fileBuffer, numChars, MPI_UNSIGNED_CHAR, i, SEND_BUFFER_TAG, MPI_COMM_WORLD);
