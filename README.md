@@ -2,7 +2,7 @@
 
 ---
 
-A parallelized RLE compression/decompression algorithm using MPI.
+An parallelized RLE compression/decompression algorithm using MPI.
 
 ## Implementation Details
 
@@ -22,34 +22,30 @@ Contains a 6-bit run size tag, followed by binary data, terminated by a double e
 
 
 
-# Example runs
+# Compiling and Running
 
-## Serial Code
+## Compilation
 
-### Serial Compression
+Invoking `make` will make both serial and parallel compression and decompression in the root directory.
 
-Compress the nameofFile.txt file using a key size of 23. Note that the name of the given file should have an extension denoted by a '.'
+Invoking `make clean` removes all .meta, .data, .o, and executable files.
 
-`./compress nameOfFile.txt 23`
+To generate nicely compressable files, invoke `python genText.py [numBytes] [filename]`. This will generate a file name `filename` with the specified number of bytes.
 
-    
-### Serial Decompression
+To compress a file in serial, invoke
 
-Decompress the nameOfFile.data and nameOfFile.meta files. Note that the 'nameOfFile' should be without any extension.
+`./serialcompress [fileName] [outputFileName]`.
 
-`./decompress nameOfFile nameOfOutputFile.txt`
+To decompress a file in serial, invoke
 
-## Parallel Code
+`./serialdecompress [fileName] [outputFileName]`
 
-### Parallel Compression
+To compress a file in parallel, invoke
 
-Compress the nameOfFile.txt file using a key size of 23 and '4' processes.
+`mpirun -n [threads] ./compress [fileName] [sliceLen]`
+
+To decompress a file in parallel, invoke
+
+`mpirun -n [threads] ./decompress [fileName] [outputFileName]
 
 `mpirun -n 4 ./compress nameOfFile.txt 23`
-
-
-### Parallel Decompression
-
-Decompress the nameOfFile#.data and nameOfFile#.meta files. Note that the 'nameOfFile' should be without any extension. Also note that the number of processes used for decompression must match the number of processes used for compresssion.
-
-`mpirun -n 4 ./decompress nameOfFile nameOfOutputFile.txt`
