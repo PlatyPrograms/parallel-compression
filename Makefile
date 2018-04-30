@@ -4,15 +4,12 @@ MPICC = mpicc
 
 CFLAGS = -O3 --std=c99 -lm
 
-TARGETS = compressor testmpi
+TARGETS = compressor
 
 all : ${TARGETS}
 
 
 compressor : compressor.o common.o buffIter.o writeBuff.o u64array.o
-	${MPICC} ${CFLAGS} -o $@ $^
-
-testmpi : testmpi.c
 	${MPICC} ${CFLAGS} -o $@ $^
 
 

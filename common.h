@@ -11,19 +11,6 @@
 #define BUFFER_SIZE_TAG 1
 #define SEND_BUFFER_TAG 2
 
-//Additional helper functions for compression
-
-//Measured in bytes; must be greater than or equal to 16
-//#define FILE_BUFFER_SIZE 200
-
-//Measured in bytes, using 0.25 gigabytes
-//#define SEND_BUFFER_SIZE 250000000
-//#define RECV_BUFFER_SIZE 250000000
-
-//The maximum key size in bits
-#define MAX_KEY_SIZE 64
-
-
 typedef struct{
 
     uint64_t * data;

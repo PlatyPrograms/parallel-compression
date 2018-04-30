@@ -15,7 +15,7 @@ typedef struct{
 
     //This is measured in bits
     unsigned long int currBit;
-    //unsigned long int startBitOffset;
+
     unsigned long int stepSize;
 
 } buffIter;

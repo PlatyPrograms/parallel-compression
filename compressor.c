@@ -72,8 +72,6 @@ int main(int argc, char * argv[]){
 	//Generate all the subsequent .data and .meta
 	//file names for the worker threads.	
 	
-	printf("Cutoff is %d\n", cutoff);
-
 	//Setup the dataFileNames and metaFileNames arrays
 	dataFileNames = (char **) malloc(sizeof(char *) * numDprocs);
 	metaFileNames = (char **) malloc(sizeof(char *) * numDprocs);
@@ -108,16 +106,7 @@ int main(int argc, char * argv[]){
 
 	}    
 	
-	//print the output file names to double-check them
-	for(int i = 0; i < numDprocs; ++i){
-	    
-	    printf("Outputting data file: %s\n", dataFileNames[i]);
-	    printf("Outputting meta file: %s\n", metaFileNames[i]);
-
-	}
-    
 	//Print some updates for the user
-	//printf("Producing files named: %s and %s\n", dataFileName, metaFileName);
 	printf("Reading with keySize of %d bits \n", keySize);
 	printf("Number of decompress procs = %d \n", numDprocs);
 
@@ -159,18 +148,15 @@ int main(int argc, char * argv[]){
 	dataFileName[cutoff + strlen(num) + j] = data[j];
 	metaFileName[cutoff + strlen(num) + j] = meta[j];
     }    
-
-    printf("[%d] My %s and my %s file names\n", MYRANK, dataFileName, metaFileName);
     
     MPI_Barrier(MPI_COMM_WORLD);
-
 
     //Next, let each process know how large of a buffer it will need
     if(MYRANK == MASTER_RANK){
 
 	//Calculate the buffer size to use for sending
 	inputFileSize = getFileSize(inputFileName);
-	bufferSize = (inputFileSize/NUMPROCS);// + (inputFileSize % NUMPROCS);
+	bufferSize = (inputFileSize/NUMPROCS);
 
 	printf("Input filesize is: %lu\n", inputFileSize);
 
@@ -182,7 +168,6 @@ int main(int argc, char * argv[]){
 
 	//For each other process, tell it its buffer size
 	for(unsigned int i = 1; i < numDprocs-1; ++i){
-	    printf("[%d] Sending %lu to proc%u\n", MYRANK, bufferSize, i);
 	    MPI_Send(&bufferSize, 1, MPI_UNSIGNED_LONG, i, BUFFER_SIZE_TAG, MPI_COMM_WORLD);
 	    	    
 	}
@@ -211,8 +196,6 @@ int main(int argc, char * argv[]){
 	//Setup my buffer info
 	myBufferSize = recvBuffSize;
 	myBuffer = recvBuffer;
-
-	printf("[%d] My recvBuffSize is %lu\n", MYRANK,  recvBuffSize);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -249,7 +232,6 @@ int main(int argc, char * argv[]){
 	fread(fileBuffer, myBufferSize, 1, inputFile);
 
 	//Setup my buffer info
-	//myBufferSize = numChars;
 	myBuffer = fileBuffer;
 
     }
@@ -304,15 +286,12 @@ int main(int argc, char * argv[]){
     //Here we account for unused bits from the buffer
     //This should actually be some wonky number
     unusedBits = unusedBuffBits(&myIter);
-    //printf("Unused Bits: %lu\n", unusedBits);
 
     closeWriteBuff(&dataWriter);
     
 
     //Now write to the meta file
     unsigned int numBits = 64;
-
-    printf("Biggest run is: %" PRIu64 "\n", counts.biggest);
     
     for(unsigned int i = 0; i < 64; ++i){
 	
@@ -321,9 +300,7 @@ int main(int argc, char * argv[]){
 	    break;
 	}
     }
-    
-    printf("Min num of bits for META counts is: %lu\n", numBits);
-    
+        
     //Write the num of bits to the meta file
     initMetaFile(myMetaFile, numBits, counts.n, numDprocs);
     
@@ -341,159 +318,19 @@ int main(int argc, char * argv[]){
     }
     
     closeWriteBuff(&metaWriter);
-    
-    
 
-/*
-    if(MYRANK == MASTER_RANK){
-	//fileBuffer = malloc(sizeof(unsigned char) * FILE_BUFFER_SIZE);
-	//recvBuffer = malloc(sizeof(unsigned char) * RECV_BUFFER_SIZE);
-
-	
-	buffIter myIter;
-	writeBuff metaWriter;
-	writeBuff dataWriter;
-	unsigned long int lastPos = 0;
-	unsigned long int unusedBits = 0;
-	
-	uint64_t next = 0;
-	uint64_t last = 0;
-	uint64_t count = 1;
-
-	
-
-	initDataFile(dataFile, keySize);
-	initWriteBuff(&dataWriter, dataFile, keySize);
-	initBuffIter(&myIter, fileBuffer, FILE_BUFFER_SIZE, keySize);
-	u64array_init(&counts);
-
-	advance(&myIter, &next);	
-	last = next;
-
-	//This portion reads the file by buffering char values
-	while(validRead == 1){	
-	    unsigned long int currPos = ftell(inputFile);
-	
-	    //Go through the buffer
-	    while(iterHasNext(&myIter)){    
-	   
-		advance(&myIter, &next);
-	   
-		//If we have a match, keep running	    
-		if(next == last){	
-		    ++count;
-		}
-		//If they don't match, write 'last' and 'count' to our files
-		else{
-	
-		    u64array_push_back(&counts, count);
-		    pushToWriteBuff(&dataWriter, last);
-	
-		    count = 1;
-		}
-		last = next;
-	    }
-
-	    //Here we account for unused bits from the buffer
-	    unusedBits = unusedBuffBits(&myIter);
-
-	    fseek(inputFile, -(unusedBits/8), SEEK_CUR);
-
-	    if(unusedBits % 8){
-		fseek(inputFile, -1, SEEK_CUR);
-	    }
-
-	    if(unusedBits){
-		unusedBits = 8 - (unusedBits % 8);
-	    }
-    
-	    lastPos = ftell(inputFile);
-
-	    //Fill the buffer with the next set of contents
-	    validRead = fread(fileBuffer, FILE_BUFFER_SIZE, 1, inputFile);
-	    setStartOffset(&myIter, unusedBits);
-	}
-
-	if(counts.n == 0){
-	    --count;
-	}
-
-	//When we hit the end of the file, yet still need to process
-	//the leftover contents
-	if(feof(inputFile)){
-	    unsigned long int bytesLeft = ftell(inputFile) - lastPos;
-	
-	    initBuffIter(&myIter, fileBuffer, bytesLeft, keySize);  
-
-	    while(iterHasNext(&myIter)){    
-	   
-		last = next;
-		advance(&myIter, &next);
-
-		//If we have a match, keep running	    
-		if(next == last){	
-		    ++count;
-		}
-		//If they don't match, write 'last' and 'count' to our files
-		else{
-
-		    u64array_push_back(&counts, count);
-		    pushToWriteBuff(&dataWriter, last);
-
-		    count = 1;
-		}
-	    }
-	}
-    
-	closeWriteBuff(&dataWriter);
-
-	//Now calculate the min bit size for the biggest element of the array.
-	unsigned int numBits = 64;
-
-	printf("Biggest run is: %" PRIu64 "\n", counts.biggest);
-
-	for(unsigned int i = 0; i < 64; ++i){
-	
-	    if((counts.biggest << i) & 0x8000000000000000){
-		numBits = 64 - i;
-		break;
-	    }
-	}
-
-	printf("Min num of bits for META counts is: %lu\n", numBits);
-
-	//Write the num of bits to the meta file
-	initMetaFile(metaFile, numBits, counts.n, numDprocs);
-    
-	//Now write the array elements to the meta file at the given bit level
-	//Create chars of the elements.
-
-	//For each array element convert it to the numBits format,
-	//string them together to then write them as chars.
-	initWriteBuff(&metaWriter, metaFile, numBits);
-
-	for(unsigned long int i = 0; i < counts.n; ++i){
-
-	    pushToWriteBuff(&metaWriter, counts.data[i] << (64-numBits));
-
-	}
-
-	closeWriteBuff(&metaWriter);
-    }
-*/
 
     MPI_Barrier(MPI_COMM_WORLD);    
-    
-    printf("Got to my end!\n");
 
     //Free up any allocations we made
     if(MYRANK == MASTER_RANK){
 
-	fclose(inputFile);
-       
+	fclose(inputFile);       
 	free(fileBuffer);
     }
+
     else{	
+
 	free(recvBuffer);
     }
 

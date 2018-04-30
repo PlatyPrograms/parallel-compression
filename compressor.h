@@ -24,7 +24,6 @@ const char meta[5] = ".meta";
 //Used to convert integers to strings
 char num[20];
 
-
 void initMetaFile(FILE * metaFile, 
 		  unsigned int lengthOfRunInBits, 
 		  unsigned long int numRuns, 

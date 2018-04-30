@@ -24,8 +24,7 @@ void setStartOffset(buffIter * iter, unsigned long int startBitOffset){
 bool iterHasNext(buffIter * iter){
 
     //If we can advance in the bits
-    return ((iter->currBit + (iter->stepSize)) <= (iter->buffSize)*8 + iter->stepSize);
-    
+    return ((iter->currBit + (iter->stepSize)) <= (iter->buffSize)*8 + iter->stepSize);    
 }
 
 
@@ -38,7 +37,6 @@ void advance(buffIter * iter, uint64_t * result){
 	//uint64_t because the the keySize is guaranteed to be <= 64
 
 	unsigned char * ptr = &(iter->buff[iter->currBit / 8]);
-	//printf("Address of step: %p\n", ptr);
 	uint64_t container = 0; 
 
 	//Now, for the next 8 bytes, copy them into container
@@ -51,8 +49,6 @@ void advance(buffIter * iter, uint64_t * result){
 	container += (((uint64_t)(ptr[6])) <<  (8) );
 	container += (((uint64_t)(ptr[7])) <<  (0) );
 
-	//printf("Container    " "%" PRIx64 "\n", container);
-
 	unsigned int nextBitInCntnr = (iter->currBit % 8) + (iter->stepSize);
 
 	//Shift to the right
@@ -60,8 +56,6 @@ void advance(buffIter * iter, uint64_t * result){
 
 	//Then shift back to the left
 	container = (container << (64 - iter->stepSize));
-
-	//printf("Putting out: %" PRIx64 "\n\n", container);
 
 	*result = container;
 
